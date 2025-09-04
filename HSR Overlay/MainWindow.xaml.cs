@@ -35,11 +35,15 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _trackTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
     private readonly DispatcherTimer _captureTimer = new() { Interval = TimeSpan.FromMilliseconds(333) };
 
+    private RelicPopupController _popup;
+
     private readonly CaptureService _capture = new(); // stubbed for now
 
     public MainWindow()
     {
         InitializeComponent();
+
+        _popup = new RelicPopupController(RelicPopup, RelicText);
 
         _tracker = new OverlayTracker(
             getDpi: () => Win32.GetDpiForWindow(_hwnd),
@@ -59,7 +63,10 @@ public partial class MainWindow : Window
                 // strong raise into topmost band
                 _zOrder.ForceRaiseTopmost(_hwnd);
             },
-            onOtherForeground: () => _zOrder.SetOverlayTopmost(_hwnd, false)
+            onOtherForeground: () => {
+                _zOrder.SetOverlayTopmost(_hwnd, false);
+                _popup?.Hide();
+            }
         );
 
         Loaded += OnLoaded;
@@ -115,12 +122,14 @@ public partial class MainWindow : Window
         if (_gameHwnd == IntPtr.Zero || Win32.IsIconic(_gameHwnd))
         {
             _tracker.HideOverlay();
+            _popup?.Hide();
             return;
         }
 
         if (!Win32.GetClientRect(_gameHwnd, out var client))
         {
             _tracker.HideOverlay();
+            _popup?.Hide();
             return;
         }
 
