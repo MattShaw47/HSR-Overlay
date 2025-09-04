@@ -11,7 +11,7 @@ internal sealed class CaptureService : IDisposable
     // Intentionally minimal for now; you'll wire Windows.Graphics.Capture here.
     public void TryCaptureOnce(IntPtr gameHwnd)
     {
-        // placeholder to prove the pump; replace with WGC session step later.
+        HSR_Overlay.Util.Log.Trace("CaptureService", $"TryCaptureOnce hwnd=0x{gameHwnd.ToInt64():X}");
     }
 
     public void Dispose() { /* stop sessions, release textures, etc. */ }

@@ -28,6 +28,7 @@ internal sealed class ZOrderController
         if (on) { ForceRaiseTopmost(overlayHwnd); return; }
         if (!_isTopmost) return;
 
+        HSR_Overlay.Util.Log.Trace("Z", "ForceRaiseTopmost");
         Win32.SetWindowPos(overlayHwnd, Win32Constants.HWND_NOTOPMOST, 0, 0, 0, 0,
             Win32Constants.SWP_NOMOVE | Win32Constants.SWP_NOSIZE | Win32Constants.SWP_NOACTIVATE | Win32Constants.SWP_NOSENDCHANGING);
         _isTopmost = false;

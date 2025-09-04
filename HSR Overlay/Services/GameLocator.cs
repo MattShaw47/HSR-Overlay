@@ -1,4 +1,5 @@
 ﻿using HSR_Overlay.Interop;
+using HSR_Overlay.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -35,6 +36,7 @@ internal sealed class GameLocator
         }
         // Local EnumWindows wrapper
         NativeEnumWindows(EnumProc);
+        Log.Debug("GameLocator", found.ToString());
         return found;
     }
 

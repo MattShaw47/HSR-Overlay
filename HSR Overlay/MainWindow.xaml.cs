@@ -60,10 +60,11 @@ public partial class MainWindow : Window
             belongsToGame: BelongsToGameProcess,
             onGameForeground: () =>
             {
-                // strong raise into topmost band
+                Log.Debug("FG", "Game foreground -> raise topmost");
                 _zOrder.ForceRaiseTopmost(_hwnd);
             },
             onOtherForeground: () => {
+                Log.Debug("FG", "Other foreground -> drop topmost");
                 _zOrder.SetOverlayTopmost(_hwnd, false);
                 _popup?.Hide();
             }
@@ -75,6 +76,7 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        Log.Init(source: "overlay", min: Microsoft.Extensions.Logging.LogLevel.Debug);
         _hwnd = new WindowInteropHelper(this).Handle;
 
         // transparent composition + message hook
@@ -94,6 +96,7 @@ public partial class MainWindow : Window
         {
             if (_gameHwnd != IntPtr.Zero && Win32.IsWindow(_gameHwnd))
             {
+                Log.Debug("Capture", "Tick");
                 // for image capture, stubbed for now
                 _capture.TryCaptureOnce(_gameHwnd);
             }
@@ -118,9 +121,12 @@ public partial class MainWindow : Window
         if (_gameHwnd == IntPtr.Zero || !Win32.IsWindow(_gameHwnd))
             _gameHwnd = _locator.FindGameWindow();
 
+        Log.Debug("GameLocator", $"Handle={_gameHwnd}");
+
         // hide if missing/minimized
         if (_gameHwnd == IntPtr.Zero || Win32.IsIconic(_gameHwnd))
         {
+            Log.Debug("Track", "HideOverlay: misising or iconic");
             _tracker.HideOverlay();
             _popup?.Hide();
             return;
@@ -128,6 +134,7 @@ public partial class MainWindow : Window
 
         if (!Win32.GetClientRect(_gameHwnd, out var client))
         {
+            Log.Debug("Track", "HideOverlay: GetClient failed");
             _tracker.HideOverlay();
             _popup?.Hide();
             return;
@@ -146,6 +153,9 @@ public partial class MainWindow : Window
         double hDip = DpiHelper.PxToDip(hPx, dpi);
 
         _tracker.ApplyBounds(leftDip, topDip, wDip, hDip);
+        Log.Trace("Track",
+            $"ApplyBounds px=({client.Right - client.Left}x{client.Bottom - client.Top}) dip=({wDip:N1}x{hDip:N1}) at ({leftDip:N1},{topDip:N1})");
+            _tracker.ApplyBounds(leftDip, topDip, wDip, hDip);
 
         // if game is foreground, keep freshly raised
         var fg = Win32.GetForegroundWindow();
