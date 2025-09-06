@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HSR_Overlay"
         xmlns:overlay="clr-namespace:HSR_Overlay.Util"
+        xmlns:mel="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions"
         mc:Ignorable="d"
         Title="HSR Overlay"
         WindowStyle="None"
@@ -16,24 +17,6 @@
         ResizeMode="NoResize"
         Width="800" Height="600">
     <Grid>
-        <!-- Clickable region -->
-        <Border x:Name="Dropdown"
-                overlay:OverlayHitTest.IsInteractive="True"
-                Width="220" Height="160"
-                Background="#AA111111" CornerRadius="6"
-                HorizontalAlignment="Left" VerticalAlignment="Top"
-                Margin="20">
-            <StackPanel>
-                <TextBlock Text="Demo Dropdown" Margin="8"
-                           Foreground="White" FontWeight="Bold"/>
-                <ComboBox x:Name="DemoCombo" Margin="8" Width="180">
-                    <ComboBoxItem Content="Option A"/>
-                    <ComboBoxItem Content="Option B"/>
-                    <ComboBoxItem Content="Option C"/>
-                </ComboBox>
-            </StackPanel>
-        </Border>
-
         <!-- Passive HUD (click-through) -->
         <TextBlock Text="Overlay HUD" Foreground="White" FontSize="18"
                    HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -56,6 +39,67 @@
                FontSize="16"
                Foreground="White"
                Opacity="0.95" />
+        </Border>
+
+        <!-- Settings button (interactive) -->
+        <Border x:Name="GearButtonHost"
+          HorizontalAlignment="Left" VerticalAlignment="Top"
+          Margin="12" Padding="6" CornerRadius="6"
+          Background="#66000000"
+          overlay:OverlayHitTest.IsInteractive="True">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="⚙" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Menu" FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Simple flyout-style panel -->
+        <Border x:Name="ConfigPanel"
+          Visibility="Collapsed"
+          HorizontalAlignment="Left" VerticalAlignment="Top"
+          Margin="12,48,0,0" Padding="12" CornerRadius="8"
+          Background="#CC101010"
+          overlay:OverlayHitTest.IsInteractive="True">
+            <StackPanel Width="260" >
+                <TextBlock Text="Overlay Settings" FontSize="14" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                <!-- Enable Relic Popup -->
+                <CheckBox Content="Enable relic popup"
+                IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <!-- Capture interval -->
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="Capture interval (ms):" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox Width="70"
+                 Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
+                <!-- Log level -->
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock Text="Log level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox Width="110"
+          SelectedValue="{Binding LogLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          SelectedValuePath="Tag">
+                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}" />
+                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}" />
+                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}" />
+                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}" />
+                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}" />
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Actions -->
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
+                    <Button x:Name="BtnSave"
+                Content="Save"
+                Padding="10,4"
+                overlay:OverlayHitTest.IsInteractive="True"/>
+                    <Button x:Name="BtnClose"
+                Content="Close"
+                Margin="8,0,0,0" Padding="10,4"
+                overlay:OverlayHitTest.IsInteractive="True"/>
+                </StackPanel>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

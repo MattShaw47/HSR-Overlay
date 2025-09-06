@@ -1,6 +1,7 @@
 ﻿using HSR_Overlay.Interop;
 using HSR_Overlay.Services;
 using HSR_Overlay.Util;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -84,6 +85,10 @@ public partial class MainWindow : Window
         src.CompositionTarget.BackgroundColor = System.Windows.Media.Colors.Transparent;
         src.AddHook(WndProc);
 
+        Settings.Load();
+        ConfigPanel.DataContext = Settings.Current;
+        Settings.Current.PropertyChanged += OnSettingsChanged;
+
         // initial find
         _gameHwnd = _locator.FindGameWindow();
 
@@ -105,14 +110,34 @@ public partial class MainWindow : Window
 
         // win-event hook for foreground change
         _fgWatcher.Start();
+
+        GearButtonHost.MouseLeftButtonUp += (_, __) => ToggleConfigPanel();
+        BtnSave.Click += (_, __) => 
+        { 
+            Settings.Save();
+            ConfigPanel.Visibility = Visibility.Collapsed;
+        };
+        BtnClose.Click += (_, __) => ConfigPanel.Visibility = Visibility.Collapsed;
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        Settings.Save();
         _trackTimer.Stop();
         _captureTimer.Stop();
         _fgWatcher.Dispose();
         _capture.Dispose();
+    }
+
+    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Settings.CaptureIntervalMs))
+            _captureTimer.Interval = TimeSpan.FromMilliseconds(Settings.Current.CaptureIntervalMs);
+
+        if (e.PropertyName == nameof(Settings.LogLevel))
+        {
+            Log.Init(min: Settings.Current.LogLevel);
+        }
     }
 
     // tracking & alignment 
@@ -120,8 +145,6 @@ public partial class MainWindow : Window
     {
         if (_gameHwnd == IntPtr.Zero || !Win32.IsWindow(_gameHwnd))
             _gameHwnd = _locator.FindGameWindow();
-
-        Log.Debug("GameLocator", $"Handle={_gameHwnd}");
 
         // hide if missing/minimized
         if (_gameHwnd == IntPtr.Zero || Win32.IsIconic(_gameHwnd))
@@ -175,7 +198,6 @@ public partial class MainWindow : Window
         return false;
     }
 
-    // click-through except “Dropdown”
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         const int WM_NCHITTEST = 0x0084;
@@ -187,10 +209,7 @@ public partial class MainWindow : Window
 
         // VisualTree hit test
         DependencyObject? hit = null;
-        VisualTreeHelper.HitTest(this,
-            /* filter */ null,
-            /* result */ r => { hit = r.VisualHit; return HitTestResultBehavior.Stop; },
-            /* params */ new PointHitTestParameters(clientPt));
+        VisualTreeHelper.HitTest(this, null, r => { hit = r.VisualHit; return HitTestResultBehavior.Stop; }, new PointHitTestParameters(clientPt));
 
         // Walk up the tree to see if any ancestor is marked IsInteractive
         bool overInteractive = false;
@@ -205,5 +224,10 @@ public partial class MainWindow : Window
 
         handled = true;
         return overInteractive ? (IntPtr)1 /*HTCLIENT*/ : (IntPtr)(-1) /*HTTRANSPARENT*/;
+    }
+
+    private void ToggleConfigPanel()
+    {
+        ConfigPanel.Visibility = ConfigPanel.Visibility == Visibility.Visible ? Visibility.Visible : Visibility.Visible;
     }
 }

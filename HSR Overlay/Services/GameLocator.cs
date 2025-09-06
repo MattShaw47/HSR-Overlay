@@ -30,7 +30,7 @@ internal sealed class GameLocator
         bool EnumProc(IntPtr hwnd, IntPtr _)
         {
             var t = Win32.GetWindowTextSafe(hwnd);
-            if (!string.IsNullOrEmpty(t) && t.IndexOf(_titleHint, StringComparison.OrdinalIgnoreCase) >= 0)
+            if (!string.IsNullOrEmpty(t) && t.Contains(_titleHint, StringComparison.OrdinalIgnoreCase))
             { found = hwnd; return false; }
             return true;
         }
