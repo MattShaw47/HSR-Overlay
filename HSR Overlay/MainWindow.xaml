@@ -48,8 +48,7 @@
           Background="#66000000"
           overlay:OverlayHitTest.IsInteractive="True">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="⚙" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Menu" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="⚙" FontSize="16" Foreground="CadetBlue"/>
             </StackPanel>
         </Border>
 
@@ -65,13 +64,13 @@
 
                 <!-- Enable Relic Popup -->
                 <CheckBox Content="Enable relic popup"
-                IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
 
                 <!-- Capture interval -->
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="Capture interval (ms):" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBox Width="70"
-                 Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                 Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
                 </StackPanel>
 
                 <!-- Log level -->
@@ -79,12 +78,12 @@
                     <TextBlock Text="Log level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ComboBox Width="110"
           SelectedValue="{Binding LogLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          SelectedValuePath="Tag">
-                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}" />
-                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}" />
-                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}" />
-                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}" />
-                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}" />
+          SelectedValuePath="Tag" Foreground="White" >
+                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}" Foreground="White"/>
+                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}" Foreground="White"/>
+                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}" Foreground="White"/>
+                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}" Foreground="White"/>
+                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}" Foreground="White"/>
                     </ComboBox>
                 </StackPanel>
 
@@ -93,11 +92,11 @@
                     <Button x:Name="BtnSave"
                 Content="Save"
                 Padding="10,4"
-                overlay:OverlayHitTest.IsInteractive="True"/>
+                overlay:OverlayHitTest.IsInteractive="True" Foreground="White"/>
                     <Button x:Name="BtnClose"
-                Content="Close"
+                Content="Cancel"
                 Margin="8,0,0,0" Padding="10,4"
-                overlay:OverlayHitTest.IsInteractive="True"/>
+                overlay:OverlayHitTest.IsInteractive="True" Foreground="White"/>
                 </StackPanel>
             </StackPanel>
         </Border>
