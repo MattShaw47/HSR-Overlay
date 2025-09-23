@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HSR_Overlay"
         xmlns:overlay="clr-namespace:HSR_Overlay.Util"
         xmlns:mel="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions"
         mc:Ignorable="d"
@@ -16,87 +15,264 @@
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         Width="800" Height="600">
+
+    <Window.Resources>
+        <!-- Dark palette -->
+        <SolidColorBrush x:Key="PanelBg" Color="#CC101010"/>
+        <SolidColorBrush x:Key="GearBg"  Color="#66000000"/>
+        <SolidColorBrush x:Key="TextOnDark" Color="#D0D0D0"/>
+        <SolidColorBrush x:Key="WhiteText" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="InputBg" Color="#222"/>
+        <SolidColorBrush x:Key="Accent" Color="#3A6EA5"/>
+        <SolidColorBrush x:Key="ButtonBg" Color="#333"/>
+        <SolidColorBrush x:Key="ButtonHover" Color="#444"/>
+        <SolidColorBrush x:Key="ButtonPress" Color="#555"/>
+        <SolidColorBrush x:Key="DropDownBg" Color="#222"/>
+        <SolidColorBrush x:Key="DropDownHighlight" Color="#3A6EA5"/>
+
+        <!-- Base text -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+        </Style>
+
+        <!-- Expander header should be white -->
+        <Style TargetType="Expander">
+            <Setter Property="Foreground" Value="{StaticResource WhiteText}"/>
+        </Style>
+
+        <!-- Text input -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextOnDark}"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Dark ComboBox template: dark selection box + dark popup -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <!-- Selection box -->
+                            <ToggleButton x:Name="ToggleButton"
+                        Grid.Column="2"
+                        Focusable="False"
+                        IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                        ClickMode="Press"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                                <Grid>
+                                    <Border x:Name="SelectionBackground"
+                      Background="{TemplateBinding Background}"
+                      BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}"
+                      CornerRadius="2"/>
+                                    <ContentPresenter Margin="6,2,24,2"
+                                Content="{TemplateBinding SelectionBoxItem}"
+                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                TextElement.Foreground="{StaticResource TextOnDark}"/>
+                                    <!-- caret -->
+                                    <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                    Data="M 0 0 L 4 4 L 8 0 Z"
+                    Fill="{StaticResource TextOnDark}"/>
+                                </Grid>
+                            </ToggleButton>
+
+                            <!-- Popup -->
+                            <Popup x:Name="Popup"
+                 Placement="Bottom"
+                 IsOpen="{TemplateBinding IsDropDownOpen}"
+                 AllowsTransparency="True"
+                 Focusable="False"
+                 PopupAnimation="Slide">
+                                <Border Background="{StaticResource InputBg}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ScrollViewer Margin="0" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="SelectionBackground" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SelectionBackground" Property="Background" Value="#2A2A2A"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="SelectionBackground" Property="Background" Value="#2A2A2A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark ComboBoxItem -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonHover}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonHover}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Button dark style -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource ButtonBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonHover}"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ButtonPress}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Panel border look -->
+        <Style x:Key="PanelBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource PanelBg}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+    </Window.Resources>
+
     <Grid>
-        <!-- Passive HUD (click-through) -->
-        <TextBlock Text="Overlay HUD" Foreground="White" FontSize="18"
-                   HorizontalAlignment="Right" VerticalAlignment="Top"
-                   Margin="0,10,20,0" Opacity="0.9"
-                   IsHitTestVisible="False"/>
+        <!-- Probe markers (click-through) -->
+        <Canvas x:Name="ProbeLayer"
+            Visibility="Collapsed"
+            IsHitTestVisible="False"
+            Panel.ZIndex="9999"/>
 
-        <!-- Relic popup, noninteractable-->
+        <!-- Passive HUD -->
+        <TextBlock Text="Overlay HUD"
+               FontSize="18"
+               HorizontalAlignment="Right"
+               VerticalAlignment="Top"
+               Margin="0,10,20,0"
+               Opacity="0.9"
+               IsHitTestVisible="False"/>
+
+        <!-- Relic popup -->
         <Border x:Name="RelicPopup"
-          Visibility="Collapsed"
-          Margin="166,0,0,0"
-          HorizontalAlignment="Left"
-          VerticalAlignment="Center"
-          Background="#AA000000"
-          CornerRadius="8"
-          Padding="12" Height="96" Width="95">
+            Visibility="Collapsed"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Margin="166,0,0,0"
+            Background="#AA000000"
+            CornerRadius="8"
+            Padding="12"
+            Height="96"
+            Width="95"
+            IsHitTestVisible="False">
             <TextBlock x:Name="RelicText"
-               Text="—"
-               TextWrapping="Wrap"
-               MaxWidth="520"
-               FontSize="16"
-               Foreground="White"
-               Opacity="0.95" />
+                 Text="—"
+                 TextWrapping="Wrap"
+                 MaxWidth="520"
+                 FontSize="16"
+                 Foreground="White"
+                 Opacity="0.95"/>
         </Border>
 
-        <!-- Settings button (interactive) -->
+        <!-- Gear button -->
         <Border x:Name="GearButtonHost"
-          HorizontalAlignment="Left" VerticalAlignment="Top"
-          Margin="12" Padding="6" CornerRadius="6"
-          Background="#66000000"
-          overlay:OverlayHitTest.IsInteractive="True">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="⚙" FontSize="16" Foreground="CadetBlue"/>
-            </StackPanel>
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Margin="12"
+            Padding="6"
+            CornerRadius="6"
+            Background="{StaticResource GearBg}"
+            overlay:OverlayHitTest.IsInteractive="True">
+            <TextBlock Text="⚙" FontSize="16" Foreground="CadetBlue"/>
         </Border>
 
-        <!-- Simple flyout-style panel -->
+        <!-- Config panel -->
         <Border x:Name="ConfigPanel"
-          Visibility="Collapsed"
-          HorizontalAlignment="Left" VerticalAlignment="Top"
-          Margin="12,48,0,0" Padding="12" CornerRadius="8"
-          Background="#CC101010"
-          overlay:OverlayHitTest.IsInteractive="True">
-            <StackPanel Width="260" >
+            Style="{StaticResource PanelBorderStyle}"
+            Visibility="Collapsed"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Margin="12,48,0,0"
+            overlay:OverlayHitTest.IsInteractive="True">
+
+            <StackPanel Width="280">
                 <TextBlock Text="Overlay Settings" FontSize="14" FontWeight="Bold" Margin="0,0,0,8"/>
 
-                <!-- Enable Relic Popup -->
                 <CheckBox Content="Enable relic popup"
-                IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
+                  IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
 
-                <!-- Capture interval -->
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="Capture interval (ms):" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBox Width="70"
-                 Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
+                    <TextBox Width="80" Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
                 </StackPanel>
 
-                <!-- Log level -->
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <TextBlock Text="Log level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox Width="110"
-          SelectedValue="{Binding LogLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          SelectedValuePath="Tag" Foreground="White" >
-                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}" Foreground="White"/>
-                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}" Foreground="White"/>
-                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}" Foreground="White"/>
-                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}" Foreground="White"/>
-                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}" Foreground="White"/>
+                    <ComboBox Width="130"
+                            SelectedValue="{Binding LogLevel, Mode=TwoWay}"
+                            SelectedValuePath="Tag">
+                        <ComboBox.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#222"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="White"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3A6EA5"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#222"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="White"/>
+                        </ComboBox.Resources>
+
+                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}"/>
+                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}"/>
+                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}"/>
+                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}"/>
+                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}"/>
                     </ComboBox>
                 </StackPanel>
 
-                <!-- Actions -->
+                <Expander Header="Developer" Margin="0,8,0,0">
+                    <StackPanel>
+                        <CheckBox Content="Show probe visualization"
+                      IsChecked="{Binding DebugVisualizationEnabled, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <TextBlock Text="Required hit ratio:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Width="70"
+                       Text="{Binding RequiredHitRatio, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=F2}"/>
+                            <TextBlock Text=" (0–1)" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+
                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
-                    <Button x:Name="BtnSave"
-                Content="Save"
-                Padding="10,4"
-                overlay:OverlayHitTest.IsInteractive="True" Foreground="White"/>
-                    <Button x:Name="BtnClose"
-                Content="Cancel"
-                Margin="8,0,0,0" Padding="10,4"
-                overlay:OverlayHitTest.IsInteractive="True" Foreground="White"/>
+                    <Button x:Name="BtnSave" Content="Save" overlay:OverlayHitTest.IsInteractive="True"/>
+                    <Button x:Name="BtnClose" Content="Cancel" Margin="8,0,0,0" overlay:OverlayHitTest.IsInteractive="True"/>
                 </StackPanel>
             </StackPanel>
         </Border>
