@@ -17,6 +17,11 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using HSR_Overlay.Services.Capture;
 using System;
+using System.Drawing;
+using HSR_Overlay.Services.Ocr;
+using MBrushes = System.Windows.Media.Brushes;
+using WPoint = System.Windows.Point;
+using DRectangle = System.Drawing.Rectangle;
 
 namespace HSR_Overlay;
 
@@ -46,6 +51,7 @@ public partial class MainWindow : Window
 
     private readonly Dictionary<string, Action<bool>> _probeStateHandlers = new();
     private readonly Dictionary<string, Action<object?>> _probeDebugHandlers = new();
+    private readonly Dictionary<string, Action<CaptureService.FrameInfo>> _probeActivatedHandlers = new();
 
     private Settings _settingsDraft = new();
 
@@ -234,7 +240,7 @@ public partial class MainWindow : Window
 
         int x = (short)((int)lParam & 0xFFFF);
         int y = (short)(((int)lParam >> 16) & 0xFFFF);
-        var clientPt = PointFromScreen(new System.Windows.Point(x, y));
+        var clientPt = PointFromScreen(new WPoint(x, y));
 
         // VisualTree hit test
         DependencyObject? hit = null;
@@ -275,9 +281,11 @@ public partial class MainWindow : Window
     {
         _capture.ProbeStateChanged += OnProbeStateChanged;
         _capture.ProbeDebugTapped += OnProbeDebugTapped;
+        _capture.ProbeActivated += OnProbeActivated;
 
         _probeStateHandlers["relic-modal"] = active => ShowRelicPopup(active);
         _probeDebugHandlers["relic-modal"] = payload => DrawSentinelPoints(payload);
+        _probeActivatedHandlers["relic-modal"] = frame => StartRelicOcr(frame);
     }
 
     private void UnwireRuntimeEvents()
@@ -296,6 +304,12 @@ public partial class MainWindow : Window
     {
         if (_probeDebugHandlers.TryGetValue(key, out var handler))
             handler(payload);
+    }
+
+    private void OnProbeActivated(string key, CaptureService.FrameInfo frame)
+    {
+        if (_probeActivatedHandlers.TryGetValue(key, out var handler))
+            handler(frame);
     }
 
     private void ShowRelicPopup(bool active)
@@ -324,14 +338,14 @@ public partial class MainWindow : Window
 
             foreach (var p in pts)
             {
-                var local = PointFromScreen(new Point(p.Cx, p.Cy));
+                var local = PointFromScreen(new WPoint(p.Cx, p.Cy));
                 var dot = new Ellipse
                 {
                     Width = r * 2,
                     Height = r * 2,
                     StrokeThickness = 2,
-                    Stroke = p.Match ? Brushes.Lime : Brushes.Red,
-                    Fill = Brushes.Transparent,
+                    Stroke = p.Match ? MBrushes.Lime : MBrushes.Red,
+                    Fill = MBrushes.Transparent,
                     IsHitTestVisible = false
                 };
                 Canvas.SetLeft(dot, local.X - r);
@@ -340,4 +354,41 @@ public partial class MainWindow : Window
             }
         });
     }
+
+    // Fired once per activation
+    private async void StartRelicOcr(CaptureService.FrameInfo frame)
+    {
+        if (!Settings.Current.EnableRelicPopup) return;
+        if (!_capture.HasLastFrame) return;
+
+        // Define the screen-space OCR rect for relics.
+        // Tune these normalized numbers to your UI; they’re just placeholders.
+        DRectangle roi = GetRelicOcrScreenRect(frame);
+
+        using var bmp = _capture.CaptureRegionToBitmap(roi);
+        string text = await OcrReader.ReadTextAsync(bmp);
+
+        // up to you: update popup text or route to another view
+        Dispatcher.Invoke(() =>
+        {
+            if (Settings.Current.EnableRelicPopup)
+                _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : text);
+        });
+    }
+
+    // Example: compute OCR ROI from normalized rectangle in client coords
+    private static DRectangle GetRelicOcrScreenRect(CaptureService.FrameInfo f)
+    {
+        // Example normalized box; replace with the actual area you want
+        const double nx = 0.23, ny = 0.42, nw = 0.54, nh = 0.14;
+
+        int x = f.OriginX + (int)(nx * f.ClientWidth);
+        int y = f.OriginY + (int)(ny * f.ClientHeight);
+        int w = (int)(nw * f.ClientWidth);
+        int h = (int)(nh * f.ClientHeight);
+
+        // Safety clamp
+        if (w <= 0 || h <= 0) return DRectangle.Empty;
+        return new DRectangle(x, y, w, h);
+    }   
 }
