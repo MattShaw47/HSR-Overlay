@@ -1,20 +1,40 @@
 ﻿using HSR_Overlay.Interop;
 using HSR_Overlay.Services.Probing;
 using HSR_Overlay.Util;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-
+using System.Windows.Media;
 
 namespace HSR_Overlay.Services.Capture;
 
 internal sealed class CaptureService : IDisposable
 {
-    // Per-probe active state + events
+    // Frame snapshot
+    public readonly struct FrameInfo
+    {
+        public FrameInfo(nint hwnd, int ox, int oy, int w, int h)
+        { GameHwnd = hwnd; OriginX = ox; OriginY = oy; ClientWidth = w; ClientHeight = h; }
+
+        public nint GameHwnd { get; }
+        public int OriginX { get; }
+        public int OriginY { get; }
+        public int ClientWidth { get; }
+        public int ClientHeight { get; }
+    }
+
+    public FrameInfo LastFrame { get; private set; }
+    public bool HasLastFrame => LastFrame.ClientWidth > 0 && LastFrame.ClientHeight > 0;
+
+    //  Events & config
     private readonly Dictionary<string, bool> _last = new();
-    public event Action<string, bool>? ProbeStateChanged; // (key, active)
+    public event Action<string, bool>? ProbeStateChanged; // (key, active) — fires on transitions
     public event Action<string, object?>? ProbeDebugTapped; // (key, debug payload)
-    public double RequiredHitRatio { get; set; } = 1.0;
+    public event Action<string, FrameInfo>? ProbeActivated; // (key, frame) — fires once on rising edge
 
+    public double RequiredHitRatio { get; set; } = 1.0; // kept for callers that mirror this into probes
 
+    // Probe registry
     private readonly List<IProbe> _probes = new();
     private readonly Dictionary<string, DateTime> _lastEvalAt = new();
 
@@ -25,6 +45,7 @@ internal sealed class CaptureService : IDisposable
         _last[probe.Key] = false;
     }
 
+    // Capture API
     public void TryCaptureOnce(nint gameHwnd)
     {
         if (gameHwnd == nint.Zero) return;
@@ -35,6 +56,9 @@ internal sealed class CaptureService : IDisposable
 
         var origin = new Win32.POINT { X = 0, Y = 0 };
         Win32.ClientToScreen(gameHwnd, ref origin);
+
+        // Update frame snapshot so consumers can compute ROIs
+        LastFrame = new FrameInfo(gameHwnd, origin.X, origin.Y, cw, ch);
 
         nint hdc = GetDC(nint.Zero);
         try
@@ -62,11 +86,16 @@ internal sealed class CaptureService : IDisposable
                 }
 
                 var res = p.Evaluate(ctx);
+
                 bool prev = _last[p.Key];
-                if (res.IsActive != prev)
+                bool cur = res.IsActive;
+
+                if (cur != prev)
                 {
-                    _last[p.Key] = res.IsActive;
-                    ProbeStateChanged?.Invoke(p.Key, res.IsActive);
+                    _last[p.Key] = cur;
+                    ProbeStateChanged?.Invoke(p.Key, cur);
+                    if (cur)
+                        ProbeActivated?.Invoke(p.Key, LastFrame); // rising edge only
                 }
 
                 if (res.Debug is not null)
@@ -76,11 +105,23 @@ internal sealed class CaptureService : IDisposable
         finally { ReleaseDC(nint.Zero, hdc); }
     }
 
+    // Grab any screen-space rectangle (BGRA32) for OCR, thumbnails, etc.
+    public Bitmap CaptureRegionToBitmap(Rectangle screenRect)
+    {
+        var bmp = new Bitmap(screenRect.Width, screenRect.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        using var g = Graphics.FromImage(bmp);
+        g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size, CopyPixelOperation.SourceCopy);
+        return bmp;
+    }
+
     public void Dispose()
     {
         ProbeStateChanged = null;
         ProbeDebugTapped = null;
+        ProbeActivated = null;
         _probes.Clear();
+        _last.Clear();
+        _lastEvalAt.Clear();
     }
 
     [DllImport("user32.dll")] private static extern nint GetDC(nint hwnd);
