@@ -1,6 +1,7 @@
 ﻿using HSR_Overlay.Interop;
 using HSR_Overlay.Services;
 using HSR_Overlay.Util;
+using HSR_Overlay.Services.Probing;
 using System.ComponentModel;
 using System.Text;
 using System.Windows;
@@ -14,6 +15,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using HSR_Overlay.Services.Capture;
+using System;
 
 namespace HSR_Overlay;
 
@@ -41,6 +44,9 @@ public partial class MainWindow : Window
     private readonly CaptureService _capture = new();
     private bool _showProbeMarkers = true;
 
+    private readonly Dictionary<string, Action<bool>> _probeStateHandlers = new();
+    private readonly Dictionary<string, Action<object?>> _probeDebugHandlers = new();
+
     private Settings _settingsDraft = new();
 
     public MainWindow()
@@ -67,7 +73,8 @@ public partial class MainWindow : Window
                 Log.Debug("FG", "Game foreground -> raise topmost");
                 _zOrder.ForceRaiseTopmost(_hwnd);
             },
-            onOtherForeground: () => {
+            onOtherForeground: () =>
+            {
                 Log.Debug("FG", "Other foreground -> drop topmost");
                 _zOrder.SetOverlayTopmost(_hwnd, false);
                 _popup?.Hide();
@@ -80,110 +87,62 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        // 1) logging + window interop
         Log.Init(source: "overlay", min: Microsoft.Extensions.Logging.LogLevel.Debug);
         _hwnd = new WindowInteropHelper(this).Handle;
-
-        // transparent composition + message hook
         var src = HwndSource.FromHwnd(_hwnd);
-        src.CompositionTarget.BackgroundColor = System.Windows.Media.Colors.Transparent;
+        src.CompositionTarget.BackgroundColor = Colors.Transparent;
         src.AddHook(WndProc);
 
+        // 2) settings -> runtime
         Settings.Load();
         ApplySettingsToRuntime();
+        _showProbeMarkers = Settings.Current.DebugVisualizationEnabled;
 
-        // initial find
+        // 3) initial game hwnd + start trackers
         _gameHwnd = _locator.FindGameWindow();
-
-        Log.Debug("overlay", "Starting timer");
-        // tracking timer
         _trackTimer.Tick += (_, __) => TrackGameWindow();
         _trackTimer.Start();
 
-        _capture.RelicPresenceChanged += present =>
+        // 4) register probes (relic modal)
+        var relicSentinels = new[]
         {
-            Dispatcher.Invoke(() =>
-            {
-                if (!Settings.Current.EnableRelicPopup)
-                {
-                    RelicPopup.Visibility = Visibility.Collapsed;
-                    RelicText.Text = string.Empty;
-                    return;
-                }
-                if (present)
-                {
-                    RelicText.Text = "Relic detected — scanning…";
-                    RelicPopup.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    RelicPopup.Visibility = Visibility.Collapsed;
-                    RelicText.Text = string.Empty;
-                }
-            });
+            SentinelProbe.Sentinel.Normalized(0.225, 0.30, 0xFFD3D3D3, tol: 18),
+            SentinelProbe.Sentinel.Normalized(0.75,  0.30, 0xFFD3D3D3, tol: 18),
+            SentinelProbe.Sentinel.Normalized(0.325, 0.59, 0xFF282828, tol: 18),
+            SentinelProbe.Sentinel.Normalized(0.3315,0.595,0xFFFFCF70, tol: 18),
         };
 
-        Log.Debug("overlay", "Loading relic vis");
-        _capture.DebugVisualizationEnabled = Settings.Current.DebugVisualizationEnabled;
-        _capture.requiredHitRatio = Settings.Current.RequiredHitRatio;
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "relic-modal",
+            sentinels: relicSentinels,
+            requiredHitRatio: Settings.Current.RequiredHitRatio,
+            hysteresis: 1
+        ));
 
-        _capture.DebugProbesTapped += points =>
-        {
-            if (!Settings.Current.DebugVisualizationEnabled) return;
+        WireRuntimeEvents();
 
-            Dispatcher.Invoke(() =>
-            {
-                ProbeLayer.Children.Clear();
-                const double r = 3.0;
-
-                foreach (var p in points)
-                {
-                    var local = this.PointFromScreen(new Point(p.ScreenX, p.ScreenY));
-
-                    var dot = new Ellipse
-                    {
-                        Width = r * 2,
-                        Height = r * 2,
-                        StrokeThickness = 1,
-                        Stroke = p.Match ? Brushes.Lime : Brushes.Red,
-                        Fill = p.Match ? Brushes.Lime : Brushes.Red,
-                        Opacity = 0.9
-                    };
-
-                    Canvas.SetLeft(dot, local.X - r);
-                    Canvas.SetTop(dot, local.Y - r);
-                    ProbeLayer.Children.Add(dot);
-                }
-            });
-        };
-
-        HookProbeVisualization();
-
-        // capture loop 
+        // 5) capture loop
         _captureTimer.Tick += (_, __) =>
         {
             if (_gameHwnd != IntPtr.Zero && Win32.IsWindow(_gameHwnd))
-            {
                 _capture.TryCaptureOnce(_gameHwnd);
-            }
         };
         _captureTimer.Start();
 
-
-        // win-event hook for foreground change
+        // 6) fg watcher
         _fgWatcher.Start();
 
+        // 7) UI buttons
         GearButtonHost.MouseLeftButtonUp += (_, __) => ToggleConfigPanel();
-
-        // Save button
         BtnSave.Click += (_, __) =>
         {
             Settings.Current.CopyFrom(_settingsDraft);
             Settings.Save();
             ApplySettingsToRuntime();
+            _showProbeMarkers = Settings.Current.DebugVisualizationEnabled;
             ConfigPanel.Visibility = Visibility.Collapsed;
         };
-
-        // Cancel button
         BtnClose.Click += (_, __) => { ConfigPanel.Visibility = Visibility.Collapsed; };
     }
 
@@ -200,13 +159,12 @@ public partial class MainWindow : Window
         // Capture frequency
         _captureTimer.Interval = TimeSpan.FromMilliseconds(Settings.Current.CaptureIntervalMs);
 
-        // Probe visualization
-        _capture.DebugVisualizationEnabled = Settings.Current.DebugVisualizationEnabled;
+        // Probe visualization (overlay side only)
         ProbeLayer.Visibility = Settings.Current.DebugVisualizationEnabled ? Visibility.Visible : Visibility.Collapsed;
         if (!Settings.Current.DebugVisualizationEnabled) ProbeLayer.Children.Clear();
 
-        // Hit ratio
-        _capture.requiredHitRatio = Settings.Current.RequiredHitRatio;
+        // Hit ratio    
+        _capture.RequiredHitRatio = Settings.Current.RequiredHitRatio;
 
         // Logger level
         Log.Init(min: Settings.Current.LogLevel);
@@ -249,7 +207,7 @@ public partial class MainWindow : Window
         _tracker.ApplyBounds(leftDip, topDip, wDip, hDip);
         Log.Trace("Track",
             $"ApplyBounds px=({client.Right - client.Left}x{client.Bottom - client.Top}) dip=({wDip:N1}x{hDip:N1}) at ({leftDip:N1},{topDip:N1})");
-            _tracker.ApplyBounds(leftDip, topDip, wDip, hDip);
+        _tracker.ApplyBounds(leftDip, topDip, wDip, hDip);
 
         // if game is foreground, keep freshly raised
         var fg = Win32.GetForegroundWindow();
@@ -313,47 +271,73 @@ public partial class MainWindow : Window
         }
     }
 
-    private void HookProbeVisualization()
+    private void WireRuntimeEvents()
     {
-        _capture.DebugProbesTapped += pts =>
+        _capture.ProbeStateChanged += OnProbeStateChanged;
+        _capture.ProbeDebugTapped += OnProbeDebugTapped;
+
+        _probeStateHandlers["relic-modal"] = active => ShowRelicPopup(active);
+        _probeDebugHandlers["relic-modal"] = payload => DrawSentinelPoints(payload);
+    }
+
+    private void UnwireRuntimeEvents()
+    {
+        _capture.ProbeStateChanged -= OnProbeStateChanged;
+        _capture.ProbeDebugTapped -= OnProbeDebugTapped;
+    }
+
+    private void OnProbeStateChanged(string key, bool active)
+    {
+        if (_probeStateHandlers.TryGetValue(key, out var handler))
+            handler(active);
+    }
+
+    private void OnProbeDebugTapped(string key, object? payload)
+    {
+        if (_probeDebugHandlers.TryGetValue(key, out var handler))
+            handler(payload);
+    }
+
+    private void ShowRelicPopup(bool active)
+    {
+        Dispatcher.Invoke(() =>
         {
-            if (!_showProbeMarkers)
+            if (!Settings.Current.EnableRelicPopup)
             {
-                // Clear if someone disabled it mid-run
-                if (ProbeLayer.Visibility == Visibility.Visible)
-                    Dispatcher.Invoke(() => { ProbeLayer.Children.Clear(); ProbeLayer.Visibility = Visibility.Collapsed; });
+                _popup.Hide();
                 return;
             }
+            if (active) _popup.Update("Relic detected — scanning...");
+            else _popup.Hide();
+        });
+    }
 
-            Dispatcher.Invoke(() =>
+    private void DrawSentinelPoints(object? payload)
+    {
+        if (payload is not IEnumerable<SentinelDebugPoint> pts) return;
+        if (!Settings.Current.DebugVisualizationEnabled) return;
+
+        Dispatcher.Invoke(() =>
+        {
+            ProbeLayer.Children.Clear();
+            const double r = 4.0;
+
+            foreach (var p in pts)
             {
-                // Ensure visible
-                if (ProbeLayer.Visibility != Visibility.Visible) ProbeLayer.Visibility = Visibility.Visible;
-                ProbeLayer.Children.Clear();
-
-                double w = this.ActualWidth;
-                double h = this.ActualHeight;
-                const double rad = 5.0;
-
-                foreach (var p in pts)
+                var local = PointFromScreen(new Point(p.Cx, p.Cy));
+                var dot = new Ellipse
                 {
-                    double x = p.U * w;
-                    double y = p.V * h;
-
-                    var dot = new Ellipse
-                    {
-                        Width = rad * 2,
-                        Height = rad * 2,
-                        Stroke = p.Match ? Brushes.Lime : Brushes.Red,
-                        Fill = Brushes.Transparent,
-                        StrokeThickness = 2,
-                        IsHitTestVisible = false
-                    };
-                    Canvas.SetLeft(dot, x - rad);
-                    Canvas.SetTop(dot, y - rad);
-                    ProbeLayer.Children.Add(dot);
-                }
-            });
-        };
+                    Width = r * 2,
+                    Height = r * 2,
+                    StrokeThickness = 2,
+                    Stroke = p.Match ? Brushes.Lime : Brushes.Red,
+                    Fill = Brushes.Transparent,
+                    IsHitTestVisible = false
+                };
+                Canvas.SetLeft(dot, local.X - r);
+                Canvas.SetTop(dot, local.Y - r);
+                ProbeLayer.Children.Add(dot);
+            }
+        });
     }
 }
