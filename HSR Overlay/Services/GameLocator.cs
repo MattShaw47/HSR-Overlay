@@ -36,7 +36,6 @@ internal sealed class GameLocator
         }
         // Local EnumWindows wrapper
         NativeEnumWindows(EnumProc);
-        Log.Debug("GameLocator", found.ToString());
         return found;
     }
 

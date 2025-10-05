@@ -162,6 +162,8 @@ public partial class MainWindow : Window
     }
     private void ApplySettingsToRuntime()
     {
+        Log.Debug("Settings", "Attempting to apply settings.");
+
         // Capture frequency
         _captureTimer.Interval = TimeSpan.FromMilliseconds(Settings.Current.CaptureIntervalMs);
 
@@ -184,7 +186,7 @@ public partial class MainWindow : Window
         // hide if missing/minimized
         if (_gameHwnd == IntPtr.Zero || Win32.IsIconic(_gameHwnd))
         {
-            Log.Debug("Track", "HideOverlay: misising or iconic");
+            Log.Debug("Track", "HideOverlay: missing or iconic");
             _tracker.HideOverlay();
             _popup?.Hide();
             return;
