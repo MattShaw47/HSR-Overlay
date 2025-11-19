@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HSR_Overlay.Util;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -23,6 +24,7 @@ public static class OcrReader
     public static async Task<string> ReadTextAsync(Bitmap bmp, string lang = "eng", CancellationToken ct = default)
     {
         var res = await ReadDetailAsync(bmp, lang, ct).ConfigureAwait(false);
+        Log.Debug("ocr", $"{res.Text?.Trim() ?? string.Empty}");
         return res.Text?.Trim() ?? string.Empty;
     }
 

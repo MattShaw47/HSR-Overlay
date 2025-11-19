@@ -42,12 +42,20 @@ public partial class MainWindow : Window
     private readonly ForegroundWatcher _fgWatcher;
 
     private readonly DispatcherTimer _trackTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
-    private readonly DispatcherTimer _captureTimer = new() { Interval = TimeSpan.FromMilliseconds(333) };
+    private readonly DispatcherTimer _captureTimer = new() { Interval = TimeSpan.FromMilliseconds(10) };
 
     private RelicPopupController _popup;
+    private readonly DispatcherTimer _relicOcrTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
+    private bool _relicModalActive;
+    private bool _relicOcrInProgress;
+
 
     private readonly CaptureService _capture = new();
     private bool _showProbeMarkers = true;
+    private IEnumerable<SentinelDebugPoint>? _lastSentinelDebug;
+    private DRectangle _lastOcrRect;
+    private bool _hasOcrRect;
+
 
     private readonly Dictionary<string, Action<bool>> _probeStateHandlers = new();
     private readonly Dictionary<string, Action<object?>> _probeDebugHandlers = new();
@@ -83,7 +91,7 @@ public partial class MainWindow : Window
             {
                 Log.Debug("FG", "Other foreground -> drop topmost");
                 _zOrder.SetOverlayTopmost(_hwnd, false);
-                _popup?.Hide();
+                //_popup?.Hide();
             }
         );
 
@@ -113,9 +121,13 @@ public partial class MainWindow : Window
         // 4) register probes (relic modal)
         var relicSentinels = new[]
         {
-            SentinelProbe.Sentinel.Normalized(0.225, 0.30, 0xFFD3D3D3, tol: 18),
-            SentinelProbe.Sentinel.Normalized(0.75,  0.30, 0xFFD3D3D3, tol: 18),
+            // top left
+            SentinelProbe.Sentinel.Normalized(0.21, 0.30, 0xFFD3D3D3, tol: 18),
+            // top right
+            SentinelProbe.Sentinel.Normalized(0.79,  0.30, 0xFFD3D3D3, tol: 18),
+            // black bar next to 5th star
             SentinelProbe.Sentinel.Normalized(0.325, 0.59, 0xFF282828, tol: 18),
+            // 5th star
             SentinelProbe.Sentinel.Normalized(0.3315,0.595,0xFFFFCF70, tol: 18),
         };
 
@@ -127,6 +139,17 @@ public partial class MainWindow : Window
         ));
 
         WireRuntimeEvents();
+
+        // periodic ocr while relic modal is active
+        _relicOcrTimer.Tick += (_, __) =>
+        {
+            if (!_relicModalActive) return;
+            if (_relicOcrInProgress) return;
+            if (!_capture.HasLastFrame) return;
+
+            // Use the most recent frame snapshot
+            StartRelicOcr(_capture.LastFrame);
+        };
 
         // 5) capture loop
         _captureTimer.Tick += (_, __) =>
@@ -285,7 +308,22 @@ public partial class MainWindow : Window
         _capture.ProbeDebugTapped += OnProbeDebugTapped;
         _capture.ProbeActivated += OnProbeActivated;
 
-        _probeStateHandlers["relic-modal"] = active => ShowRelicPopup(active);
+        _probeStateHandlers["relic-modal"] = active =>
+        {
+            _relicModalActive = active;
+            ShowRelicPopup(active);
+
+            if (active)
+            {
+                if (!_relicOcrTimer.IsEnabled)
+                    _relicOcrTimer.Start();
+            }
+            else
+            {
+                _relicOcrTimer.Stop();
+            }
+        };
+
         _probeDebugHandlers["relic-modal"] = payload => DrawSentinelPoints(payload);
         _probeActivatedHandlers["relic-modal"] = frame => StartRelicOcr(frame);
     }
@@ -323,6 +361,7 @@ public partial class MainWindow : Window
                 _popup.Hide();
                 return;
             }
+
             if (active) _popup.Update("Relic detected — scanning...");
             else _popup.Hide();
         });
@@ -330,59 +369,126 @@ public partial class MainWindow : Window
 
     private void DrawSentinelPoints(object? payload)
     {
+        if (!Settings.Current.DebugVisualizationEnabled) return;
         if (payload is not IEnumerable<SentinelDebugPoint> pts) return;
+
+        // cache and redraw
+        _lastSentinelDebug = pts.ToArray();
+        RenderDebugOverlay();
+    }
+
+    private void DrawOcrRect(DRectangle roi)
+    {
+        if (!Settings.Current.DebugVisualizationEnabled) return;
+        if (roi.Width <= 0 || roi.Height <= 0) return;
+
+        _lastOcrRect = roi;
+        _hasOcrRect = true;
+        RenderDebugOverlay();
+    }
+
+    private void RenderDebugOverlay()
+    {
         if (!Settings.Current.DebugVisualizationEnabled) return;
 
         Dispatcher.Invoke(() =>
         {
             ProbeLayer.Children.Clear();
+
             const double r = 4.0;
 
-            foreach (var p in pts)
+            // 1) Sentinel dots
+            if (_lastSentinelDebug is not null)
             {
-                var local = PointFromScreen(new WPoint(p.Cx, p.Cy));
-                var dot = new Ellipse
+                foreach (var p in _lastSentinelDebug)
                 {
-                    Width = r * 2,
-                    Height = r * 2,
+                    var local = PointFromScreen(new WPoint(p.Cx, p.Cy));
+                    var dot = new Ellipse
+                    {
+                        Width = r * 2,
+                        Height = r * 2,
+                        StrokeThickness = 2,
+                        Stroke = p.Match ? MBrushes.Lime : MBrushes.Red,
+                        Fill = MBrushes.Transparent,
+                        IsHitTestVisible = false
+                    };
+                    Canvas.SetLeft(dot, local.X - r);
+                    Canvas.SetTop(dot, local.Y - r);
+                    ProbeLayer.Children.Add(dot);
+                }
+            }
+
+            // 2) OCR ROI rectangle
+            if (_hasOcrRect)
+            {
+                // screen → overlay
+                var topLeft = PointFromScreen(new WPoint(_lastOcrRect.Left, _lastOcrRect.Top));
+                var bottomRight = PointFromScreen(new WPoint(_lastOcrRect.Right, _lastOcrRect.Bottom));
+
+                var w = Math.Max(0, bottomRight.X - topLeft.X);
+                var h = Math.Max(0, bottomRight.Y - topLeft.Y);
+
+                var rect = new System.Windows.Shapes.Rectangle
+                {
+                    Width = w,
+                    Height = h,
                     StrokeThickness = 2,
-                    Stroke = p.Match ? MBrushes.Lime : MBrushes.Red,
-                    Fill = MBrushes.Transparent,
+                    Stroke = MBrushes.Yellow,
+                    Fill = System.Windows.Media.Brushes.Transparent,
                     IsHitTestVisible = false
                 };
-                Canvas.SetLeft(dot, local.X - r);
-                Canvas.SetTop(dot, local.Y - r);
-                ProbeLayer.Children.Add(dot);
+
+                Canvas.SetLeft(rect, topLeft.X);
+                Canvas.SetTop(rect, topLeft.Y);
+                ProbeLayer.Children.Add(rect);
             }
         });
     }
 
+
+
     // Fired once per activation
     private async void StartRelicOcr(CaptureService.FrameInfo frame)
     {
+        if (!_relicModalActive) return;
         if (!Settings.Current.EnableRelicPopup) return;
         if (!_capture.HasLastFrame) return;
+        if (_relicOcrInProgress) return;
 
-        // Define the screen-space OCR rect for relics.
-        // Tune these normalized numbers to your UI; they’re just placeholders.
-        DRectangle roi = GetRelicOcrScreenRect(frame);
+        _relicOcrInProgress = true;
 
-        using var bmp = _capture.CaptureRegionToBitmap(roi);
-        string text = await OcrReader.ReadTextAsync(bmp);
+        Log.Debug("ocr", "attempting to start ocr");
 
-        // up to you: update popup text or route to another view
-        Dispatcher.Invoke(() =>
+        try
         {
-            if (Settings.Current.EnableRelicPopup)
-                _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : text);
-        });
+            // Define the screen-space OCR rect for relics.
+            // Tune these normalized numbers to your UI; they’re just placeholders.
+            DRectangle roi = GetRelicOcrScreenRect(frame);
+
+            DrawOcrRect(roi);
+
+            using var bmp = _capture.CaptureRegionToBitmap(roi);
+            string text = await OcrReader.ReadTextAsync(bmp);
+
+            // up to you: update popup text or route to another view
+            Dispatcher.Invoke(() =>
+            {
+                if (Settings.Current.EnableRelicPopup)
+                    _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : text);
+            });
+        }
+        finally
+        {
+            _relicOcrInProgress = false;
+        }
+        
     }
 
     // Example: compute OCR ROI from normalized rectangle in client coords
     private static DRectangle GetRelicOcrScreenRect(CaptureService.FrameInfo f)
     {
         // Example normalized box; replace with the actual area you want
-        const double nx = 0.23, ny = 0.42, nw = 0.54, nh = 0.14;
+        const double nx = 0.41, ny = 0.35, nw = 0.4, nh = 0.4;
 
         int x = f.OriginX + (int)(nx * f.ClientWidth);
         int y = f.OriginY + (int)(ny * f.ClientHeight);

@@ -190,18 +190,20 @@
             VerticalAlignment="Center"
             Margin="166,0,0,0"
             Background="#AA000000"
-            CornerRadius="8"
-            Padding="12"
-            Height="96"
-            Width="95"
+            CornerRadius="6"
+            Padding="8"
             IsHitTestVisible="False">
-            <TextBlock x:Name="RelicText"
-                 Text="—"
-                 TextWrapping="Wrap"
-                 MaxWidth="520"
-                 FontSize="16"
-                 Foreground="White"
-                 Opacity="0.95"/>
+            <ScrollViewer MaxWidth="500"
+                          MaxHeight="350"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="RelicText"
+                     Text="—"
+                     TextWrapping="Wrap"
+                     MaxWidth="520"
+                     FontSize="16"
+                     Foreground="White"
+                     Opacity="0.95"/>
+            </ScrollViewer>
         </Border>
 
         <!-- Gear button -->
@@ -259,7 +261,7 @@
 
                 <Expander Header="Developer" Margin="0,8,0,0">
                     <StackPanel>
-                        <CheckBox Content="Show probe visualization"
+                        <CheckBox Content="Show debug visuals"
                       IsChecked="{Binding DebugVisualizationEnabled, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <TextBlock Text="Required hit ratio:" VerticalAlignment="Center" Margin="0,0,8,0"/>
