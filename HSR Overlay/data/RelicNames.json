@@ -1,0 +1,322 @@
+﻿{
+
+  // relics
+  "passerby of wandering cloud": {
+    "head": [ "passerby's rejuvenated wooden hairstick" ],
+    "hands": [ "passerby's roaming dragon bracer" ],
+    "body": [ "passerby's ragged embroided coat" ],
+    "feet": [ "passerby's stygian hiking boots" ]
+  },
+
+  "musketeer of wild wheat": {
+    "head": [ "musketeer's wild wheat felt hat" ],
+    "hands": [ "musketeer's coarse leather gloves" ],
+    "body": [ "musketeer's wind-hunting shawl" ],
+    "feet": [ "musketeer's rivets riding boots" ]
+  },
+
+  "knight of purity palace": {
+    "head": [ "knight's forgiving casque" ],
+    "hands": [ "knight's silent oath ring" ],
+    "body": [ "knight's solemn breastplate" ],
+    "feet": [ "knight's iron boots of order" ]
+  },
+
+  "hunter of glacial forest": {
+    "head": [ "hunter's artaius hood" ],
+    "hands": [ "hunter's lizard gloves" ],
+    "body": [ "hunter's ice dragon cloak" ],
+    "feet": [ "hunter's soft elkskin boots" ]
+  },
+
+  "champion of streetwise boxing": {
+    "head": [ "champion's headgear" ],
+    "hands": [ "champion's heavy gloves" ],
+    "body": [ "champion's chest guard" ],
+    "feet": [ "champion's fleetfoot boots" ]
+  },
+
+  "guard of wuthering snow": {
+    "head": [ "guard's cast iron helmet" ],
+    "hands": [ "guard's shining gauntlets" ],
+    "body": [ "guard's uniform of old" ],
+    "feet": [ "guard's silver greaves" ]
+  },
+
+  "firesmith of lava-forging": {
+    "head": [ "firesmith's obsidian goggles" ],
+    "hands": [ "firesmith's ring of flame-mastery" ],
+    "body": [ "firesmith's fireproof apron" ],
+    "feet": [ "firesmith's alloy leg" ]
+  },
+
+  "genius of brilliant stars": {
+    "head": [ "genius's ultraremote sensing visor" ],
+    "hands": [ "genius's frequency catcher" ],
+    "body": [ "genius's metafield suit" ],
+    "feet": [ "genius's gravity walker" ]
+  },
+
+  "band of sizzling thunder": {
+    "head": [ "band's polarized sunglasses" ],
+    "hands": [ "band's touring bracelet" ],
+    "body": [ "band's leather jacket with studs" ],
+    "feet": [ "band's ankle boots with rivets" ]
+  },
+
+  "eagle of twilight line": {
+    "head": [ "eagle's beaked helmet" ],
+    "hands": [ "eagle's soaring ring" ],
+    "body": [ "eagle's winged suit harness" ],
+    "feet": [ "eagle's quilted puttees" ]
+  },
+
+  "thief of shooting meteor": {
+    "head": [ "thief's myriad-faced mask" ],
+    "hands": [ "thief's glove with prints" ],
+    "body": [ "thief's steel grappling hook" ],
+    "feet": [ "thief's meteor boots" ]
+  },
+
+  "wastelander of banditry desert": {
+    "head": [ "wastelander's breathing mask" ],
+    "hands": [ "wastelander's desert terminal" ],
+    "body": [ "wastelander's friar robe" ],
+    "feet": [ "wastelander's powered greaves" ]
+  },
+
+  "longevous disciple": {
+    "head": [ "disciple's prosthetic eye" ],
+    "hands": [ "dsciple's ingenium hand" ],
+    "body": [ "disciple's dewy feather garb" ],
+    "feet": [ "disciple's celestial silk sandals" ]
+  },
+
+  "messenger traversing hackerspace": {
+    "head": [ "messenger's holovisor" ],
+    "hands": [ "messenger's transformative arm" ],
+    "body": [ "messenger's secret satchel" ],
+    "feet": [ "messenger's par-kool sneakers" ]
+  },
+
+  "the ashblazing grand duke": {
+    "head": [ "grand duke's crown of netherflame" ],
+    "hands": [ "grand duke's gloves of fireyfur" ],
+    "body": [ "grand duke's robe of grace" ],
+    "feet": [ "grand duke's ceremonial boots" ]
+  },
+
+  "prisoner in deep confinement": {
+    "head": [ "prisoner's sealed muzzle" ],
+    "hands": [ "prisoner's leadstone shackles" ],
+    "body": [ "prisoner's repressive straitjacket" ],
+    "feet": [ "prisoner's restrictive fetters" ]
+  },
+
+  "pioneer diver of dead waters": {
+    "head": [ "pioneer's heatproof shell" ],
+    "hands": [ "pioneer's lacuna compass" ],
+    "body": [ "pioneer's sealed lead apron" ],
+    "feet": [ "pioneer's starfaring anchor" ]
+  },
+
+  "watchmaker, master of dream machinations": {
+    "head": [ "watchmaker's telescoping lens" ],
+    "hands": [ "watchmaker's fortuitous wristwatch" ],
+    "body": [ "watchmaker's illusory formal suit" ],
+    "feet": [ "watchmaker's dream-concealing dress shoes" ]
+  },
+
+  "iron cavalry against the scourge": {
+    "head": [ "iron cavalry's homing helm" ],
+    "hands": [ "iron cavalry's crushing wristguard" ],
+    "body": [ "iron cavalry's silvery armor" ],
+    "feet": [ "iron cavalry's skywalk greaves" ]
+  },
+
+  "the wind-soaring valorous": {
+    "head": [ "valorous mask of northern skies" ],
+    "hands": [ "valorous bracelet of grappling hooks" ],
+    "body": [ "valorous plate of soaring flight" ],
+    "feet": [ "valorous greaves of pursuing hunt" ]
+  },
+
+  "sacerdos' relived ordeal": {
+    "head": [ "sacerdos' melodic earrings" ],
+    "hands": [ "sacerdos' welcoming gloves" ],
+    "body": [ "sacerdos' ceremonial garb" ],
+    "feet": [ "sacerdos' arduous boots" ]
+  },
+
+  "scholar lost in erudition": {
+    "head": [ "scholar's silver-rimmed monocle" ],
+    "hands": [ "scholar's auxiliary knuckle" ],
+    "body": [ "scholar's tweed jacket" ],
+    "feet": [ "shcolar's felt snowboots" ]
+  },
+
+  "hero of triumphant song": {
+    "head": [ "hero's wreath of championship" ],
+    "hands": [ "hero's gilded bracers" ],
+    "body": [ "hero's gallant golden armor" ],
+    "feet": [ "hero's firechasing shinguard" ]
+  },
+
+  "poet of mourning collapse": {
+    "head": [ "poet's dill wreath" ],
+    "hands": [ "poet's gilded bracelet" ],
+    "body": [ "poet's star-studded skirt" ],
+    "feet": [ "poet's silver-studded shoes" ]
+  },
+
+  "warrior goddess of sun and thunder": {
+    "head": [ "warrior goddess's winged helm" ],
+    "hands": [ "warrior goddess's cavalry gauntlets" ],
+    "body": [ "warrior goddess's dawn cape" ],
+    "feet": [ "warrior goddess's honor spurs" ]
+  },
+
+  "wavestrider captain": {
+    "head": [ "captain's navigator hat" ],
+    "hands": [ "captains's lightcatcher astrolabe" ],
+    "body": [ "captain's wind mantle" ],
+    "feet": [ "captain's tidal boots" ]
+  },
+
+  "world-remaking deliverer": {
+    "head": [ "deliverer's hood" ],
+    "hands": [ "deliverer's sword gauntlet" ],
+    "body": [ "deliverer's robe of legacy" ],
+    "feet": [ "deliverer's boots of pioneering" ]
+  },
+
+  "self-enshrouded recluse": {
+    "head": [ "recluse's wide-brimmed fedora" ],
+    "hands": [ "recluse's refined timepiece" ],
+    "body": [ "recluse's camel-colored coat" ],
+    "feet": [ "recluse's soft suede boots" ]
+  },
+
+
+  // planars
+
+  "space sealing station": {
+    "orb": [ "herta's space stations" ],
+    "rope": [ "herta's wandering trek" ]
+  },
+
+  "fleet of the ageless": {
+    "orb": [ "the xianzhou luofu's celestial ark" ],
+    "rope": [ "the xianzhou luofu's ambrosial arbor vines" ]
+  },
+
+  "talia: kingdom of banditry": {
+    "orb": [ "talia's nailscrap town" ],
+    "rope": [ "talia's exposed electric wire" ]
+  },
+
+  "sprightly vonwacq": {
+    "orb": [ "vonwacq's island of birth" ],
+    "rope": [ "vonwacq's islandic coast" ]
+  },
+
+  "pan-cosmic commercial enterprise": {
+    "orb": [ "the ipc's mega hq" ],
+    "rope": [ "the ipc's trade route" ]
+  },
+
+  "celestial differentiator": {
+    "orb": [ "planet screwllum's mechanical sun" ],
+    "rope": [ "planet screwllum's ring system" ]
+  },
+
+  "belobog of the architects": {
+    "orb": [ "belobog's fortress of preservation" ],
+    "rope": [ "belobog's iron defense" ]
+  },
+
+  "inert salsotto": {
+    "orb": [ "salsotto's moving city" ],
+    "rope": [ "salsotto's terminator line" ]
+  },
+
+  "rutilant arena": {
+    "orb": [ "taikiyan laser stadium" ],
+    "rope": [ "taikiyan's arclight race track" ]
+  },
+
+  "broken keel": {
+    "orb": [ "insumousu's whalefall ship" ],
+    "rope": [ "insumousu's frayed hawser" ]
+  },
+
+  "firmament frontline: glamoth": {
+    "orb": [ "glamoth's iron cavalry regiment" ],
+    "rope": [ "glamoth's silent tombstone" ]
+  },
+
+  "penacony, land of the dreams": {
+    "orb": [ "penacony's grand hotel" ],
+    "rope": [ "penacony's dream-seeking tracks" ]
+  },
+
+  "sigonia, the unclaimed desolation": {
+    "orb": [ "sigonia's gaiathra berth" ],
+    "rope": [ "sigonia's knot of cyclicality" ]
+  },
+
+  "izumo gensei and takama divine realm": {
+    "orb": [ "izumo's magatsu no morokami" ],
+    "rope": [ "izumo's blades of origin and end" ]
+  },
+
+  "duran, dynasty of running wolves": {
+    "orb": [ "duran's tent of the golden sky" ],
+    "rope": [ "duran's mechabeast bridle" ]
+  },
+
+  "forge of the kalpagni lantern": {
+    "orb": [ "forge's lotus lantern wick" ],
+    "rope": [ "forge's heavenly flamewheel silk" ]
+  },
+
+  "bone collection's serene demesne": {
+    "orb": [ "aidonia's deceased gravestones" ],
+    "rope": [ "aidonia's deathward bone chains" ]
+  },
+
+  "giant tree of rapt brooding": {
+    "orb": [ "grove of epiphany's pondering colossus" ],
+    "rope": [ "grove of epiphany's interwoven veins" ]
+  },
+
+  "arcadia of woven dreams": {
+    "orb": [ "membrance maze's serene treehouse" ],
+    "rope": [ "membrance maze's wishing wistle" ]
+  },
+
+  "revelry by the sea": {
+    "orb": [ "warbling shore's blazing beacon" ],
+    "rope": [ "warbling shore's cantillation trail" ]
+  },
+
+  "amphoreus, the eternal land": {
+    "orb": [ "last west wind of amphoreus" ],
+    "rope": [ "eternal verses of amphoreus" ]
+  },
+
+  "tengoku@livestream": {
+    "orb": [ "livestream's protean vistas" ],
+    "rope": [ "livestream's chatter banter" ]
+  },
+
+  "lushaka, the sunken seas": {
+    "orb": [ "lushaka's waterscape" ],
+    "rope": [ "lushaka's twinlanes" ]
+  },
+
+  "the wondrous bananamusement park": {
+    "orb": [ "bananamusement park's bananaxis plaza" ],
+    "rope":  [ "bananamusement park's memetic cables"]
+  }
+}
