@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace HSR_Overlay.Services.Analysis;
 
-public interface IRelicWeightsProvider
+internal class RelicTextContext(RelicTextSource source)
 {
-    IReadOnlyList<IRelicWeightsProvider> GetProfile(
-        string relicSetName,
-        RelicSlot slotKey
-        );
+    public RelicTextSource Source { get; init; } = source;
 }

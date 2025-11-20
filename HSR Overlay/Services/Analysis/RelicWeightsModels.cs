@@ -8,11 +8,11 @@ namespace HSR_Overlay.Services.Analysis;
 
 public class CharacterRelicProfile
 {
-    public IReadOnlyList<string> PlanarSets { get; init; } = Array.Empty<string>();
-    public IReadOnlyList<string> Set1Candidates { get; init; } = Array.Empty<string>();
-    public IReadOnlyList<string> Set2Candidates { get; init; } = Array.Empty<string>();
+    public string PlanarSet { get; init; } = string.Empty;
+    public string Set1Candidate { get; init; } = string.Empty;
+    public string Set2Candidate { get; init; } = string.Empty;
 
-    public Dictionary<string, RelicSlotWeights> Slots { get; init; } = new (StringComparer.OrdinalIgnoreCase);
+    public Dictionary<RelicSlot, RelicSlotWeights> Slots { get; init; } = [];
 }
 
 public class RelicSlotWeights
@@ -25,7 +25,7 @@ public class RelicSlotWeights
 public class RelicWeightsProfile
 {
     public required string CharacterKey { get; init; }
-    public required string SlotKey { get; init; }
+    public required RelicSlot SlotKey { get; init; }
     public required string SetName { get; init; }
 
     public required string DesiredMainStat { get; init; }

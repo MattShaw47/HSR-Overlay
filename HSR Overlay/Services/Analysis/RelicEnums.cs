@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 namespace HSR_Overlay.Services.Analysis;
 
-public enum RelicSet
-{
-    None = 0,
-    Genius
-}
-
 public enum RelicSlot
 {
     None,
@@ -39,4 +33,10 @@ public enum Stat
     EnergyRegen,
     EffectHitRate,
     EffectRes
+}
+
+public enum RelicTextSource
+{
+    CharacterScreen,
+    Farming
 }

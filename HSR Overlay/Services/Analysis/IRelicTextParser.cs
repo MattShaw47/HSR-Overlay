@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace HSR_Overlay.Services.Analysis;
 
-public interface IRelicWeightsProvider
+internal interface IRelicTextParser
 {
-    IReadOnlyList<IRelicWeightsProvider> GetProfile(
-        string relicSetName,
-        RelicSlot slotKey
-        );
+    ParsedRelic Parse(string rawOcrText, RelicTextContext context);
 }

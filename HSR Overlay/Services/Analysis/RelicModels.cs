@@ -8,7 +8,7 @@ namespace HSR_Overlay.Services.Analysis;
 
 public sealed class ParsedRelic
 {
-    public RelicSet Set { get; init; } = RelicSet.None;
+    public string Set { get; init; } = String.Empty;
 
     public RelicSlot Slot { get; init; } = RelicSlot.None;
 
@@ -23,8 +23,8 @@ public sealed class ParsedRelic
 
 public class Substat
 {
-    public Stat Stat {  get; init; } = Stat.None;
-    public double Value { get; init; }
+    public required Stat Stat {  get; init; } = Stat.None;
+    public required double Value { get; init; }
 
     public int Rolls { get; init; }
 }
@@ -32,7 +32,8 @@ public class Substat
 public class RelicEvaluation
 {
     public required ParsedRelic Relic { get; init; }
+
+    // key: character name
+    // val: improvement chance in %
     public Dictionary<String, double> ImprovementChances { get; init; } = new Dictionary<String, double>();
-    
-    // I figure the actual creation of a displayable string from this info can get handled by the MainWindow code?
 }

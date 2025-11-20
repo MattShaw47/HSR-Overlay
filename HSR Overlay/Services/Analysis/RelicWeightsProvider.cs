@@ -17,7 +17,7 @@ internal class RelicWeightsProvider : IRelicWeightsProvider
     }
 
     // returns all weight profiles for all characters who have slot weights for this slotKey and consider this setName relevant for that slot
-    IReadOnlyList<IRelicWeightsProvider> IRelicWeightsProvider.GetProfile(string relicSetName, string slotKey)
+    IReadOnlyList<IRelicWeightsProvider> IRelicWeightsProvider.GetProfile(string relicSetName, RelicSlot slotKey)
     {
         var results = new List<RelicWeightsProfile>();
 
@@ -27,7 +27,7 @@ internal class RelicWeightsProvider : IRelicWeightsProvider
             var profile = pair.Value;
 
             if (!profile.Slots.TryGetValue(slotKey, out var slotWeights))
-                continue;
+                    continue;
 
             if (!IsSetRelevantForSlot(profile, relicSetName, slotKey))
                 continue;
@@ -43,22 +43,44 @@ internal class RelicWeightsProvider : IRelicWeightsProvider
         return (IReadOnlyList<IRelicWeightsProvider>)results;
     }
 
-    private bool IsSetRelevantForSlot(CharacterRelicProfile profile, string setName, string slotKey)
+    private bool IsSetRelevantForSlot(CharacterRelicProfile profile, string setName, RelicSlot slotKey)
     {
-        return true;
+        if (profile.Slots.Count == 0)
+            return false;
+
+        bool isCavernSlot = slotKey is RelicSlot.Head or RelicSlot.Hands or RelicSlot.Body or RelicSlot.Feet;
+        bool isPlanarSlot = slotKey is RelicSlot.Sphere or RelicSlot.Rope;
+
+        // Cavern relic relevance
+        if (isCavernSlot)
+        {
+            if (setName == profile.Set1Candidate || setName == profile.Set2Candidate)
+                return true;
+            return false;
+        }
+
+        // Planar relic relevance
+        if (isPlanarSlot)
+        {
+            if (setName == profile.PlanarSet)
+                return true;
+            return false;
+        }
+
+        return false;
     }
 
     private static RelicWeightsProfile CreateWeightsProfile(
         string characterKey,
         string setName,
-        string slotKey,
+        RelicSlot slotKey,
         CharacterRelicProfile profile,
         RelicSlotWeights slotWeights)
     {
         // TODO: Improve later
-        var preferredSet1 = profile.Set1Candidates.FirstOrDefault();
-        var preferredSet2 = profile.Set2Candidates.FirstOrDefault();
-        var prefferedPlanar = profile.PlanarSets.FirstOrDefault();
+        var preferredSet1 = profile.Set1Candidate;
+        var preferredSet2 = profile.Set2Candidate;
+        var prefferedPlanar = profile.PlanarSet;
 
         return new RelicWeightsProfile
         {
