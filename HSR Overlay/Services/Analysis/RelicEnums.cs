@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace HSR_Overlay.Services.Analysis;
@@ -17,6 +18,7 @@ public enum RelicSlot
     Rope
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum Stat
 {
     None,

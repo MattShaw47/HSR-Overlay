@@ -14,7 +14,11 @@
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
 	<None Remove="data\relicNames.json" />
-	<Content Include="data\relicNames.json">
+	<None Remove="data\RelicStats.json" />
+	<Content Include="data\RelicNames.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="data\RelicStats.json">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</Content>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />

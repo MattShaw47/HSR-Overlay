@@ -68,6 +68,7 @@ public partial class MainWindow : Window
     private IRelicTextParser _relicTextParser;
     private IRelicWeightsProvider _relicWeightsProvider;
     private RelicPieceDatabase _relicPieceDb;
+    private RelicStatTables _relicStatTables;
 
     public MainWindow()
     {
@@ -147,12 +148,13 @@ public partial class MainWindow : Window
         WireRuntimeEvents();
 
         // database / relic parser initialization
-        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string jsonPath = System.IO.Path.Combine(baseDir, "data", "relicNames.json");
-        _relicPieceDb = RelicPieceDatabase.Load(jsonPath);
+        string jsonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+
+        _relicPieceDb = RelicPieceDatabase.Load(System.IO.Path.Combine(jsonPath, "RelicNames.json"));
         _relicTextParser = new RelicTextParser(_relicPieceDb);
         var emptyProfiles = new Dictionary<string, CharacterRelicProfile>();
         _relicWeightsProvider = new RelicWeightsProvider(emptyProfiles);
+        _relicStatTables = new RelicStatTables(RelicStatConfig.Load(System.IO.Path.Combine(jsonPath, "RelicStats.json")));
         // load character profiles here as well
         // load stored relic inventory
 
@@ -488,18 +490,16 @@ public partial class MainWindow : Window
 
             ParsedRelic foundRelic = _relicTextParser.Parse(text, new RelicTextContext(RelicTextSource.Farming));
 
-            // TODO REPLACE LAST ARG WITH THE ACTUAL COMPARISON RELIC
-            List<RelicEvaluation> relicEvaluations = RelicAnalyzer.Analyze(foundRelic, _relicWeightsProvider, _relicPieceDb, new ParsedRelic());
+            RelicEvaluation relicEvaluations = RelicAnalyzer.Analyze(foundRelic, _relicWeightsProvider, _relicStatTables);
 
             Log.Debug("raw text", text);
 
             // once the list of relic evaluations is returned, process into string and display on popup.
-            string relicText = foundRelic.MainStat.ToString() + foundRelic.MainStatValue.ToString() + "\n" + foundRelic.Substats[0].ToString() + foundRelic.Substats[0].Value.ToString();
 
             Dispatcher.Invoke(() =>
             {
                 if (Settings.Current.EnableRelicPopup)
-                    _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : relicText);
+                    _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : text);
             });
         }
         finally

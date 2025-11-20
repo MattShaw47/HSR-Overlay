@@ -17,9 +17,9 @@ public class CharacterRelicProfile
 
 public class RelicSlotWeights
 {
-    public string MainStat { get; init; } = "";
+    public Stat MainStat { get; init; } = Stat.None;
 
-    public Dictionary<string, double> SubstatWeights { get; init; } = new Dictionary<string, double>();
+    public Dictionary<Stat, double> SubstatWeights { get; init; } = new Dictionary<Stat, double>();
 }
 
 public class RelicWeightsProfile
@@ -28,9 +28,9 @@ public class RelicWeightsProfile
     public required RelicSlot SlotKey { get; init; }
     public required string SetName { get; init; }
 
-    public required string DesiredMainStat { get; init; }
+    public required Stat DesiredMainStat { get; init; }
 
-    public Dictionary<string, double> SubstatWeights { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<Stat, double> SubstatWeights { get; init; } = new();
 
     public string? PreferredSet1 { get; init; }
     public string? PreferredSet2 { get; init; }

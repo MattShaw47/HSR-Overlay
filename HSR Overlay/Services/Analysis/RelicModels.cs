@@ -25,8 +25,6 @@ public class Substat
 {
     public required Stat Stat {  get; init; } = Stat.None;
     public required double Value { get; init; }
-
-    public int Rolls { get; init; }
 }
 
 public class RelicEvaluation

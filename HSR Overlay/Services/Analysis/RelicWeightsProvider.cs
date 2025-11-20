@@ -16,7 +16,8 @@ public sealed class RelicWeightsProvider : IRelicWeightsProvider
         _characters = characters;
     }
 
-    // returns all weight profiles for all characters who have slot weights for this slotKey and consider this setName relevant for that slot
+    // returns each relevant weight profile for all characters who have slot weights for this slot and consider this setName relevant for that slot.
+    // This means RelicWeightsProfile only stores weights for slot, and 
     public IReadOnlyList<RelicWeightsProfile> GetProfiles(
         string relicSetName,
         RelicSlot slot
@@ -91,7 +92,7 @@ public sealed class RelicWeightsProvider : IRelicWeightsProvider
             SetName = setName,
             SlotKey = slotKey,
             DesiredMainStat = slotWeights.MainStat,
-            SubstatWeights = new Dictionary<string, double>(slotWeights.SubstatWeights, StringComparer.OrdinalIgnoreCase),
+            SubstatWeights = new Dictionary<Stat, double>(slotWeights.SubstatWeights),
             PreferredSet1 = preferredSet1,
             PreferredSet2 = preferredSet2,
             PreferredPlanar = prefferedPlanar
