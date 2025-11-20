@@ -1,6 +1,4 @@
 ﻿{
-
-  // relics
   "passerby of wandering cloud": {
     "head": [ "passerby's rejuvenated wooden hairstick" ],
     "hands": [ "passerby's roaming dragon bracer" ],
@@ -198,7 +196,8 @@
   },
 
 
-  // planars
+
+
 
   "space sealing station": {
     "orb": [ "herta's space stations" ],

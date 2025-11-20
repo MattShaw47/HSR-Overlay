@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HSR_Overlay.Services.Analysis;
 
-internal class RelicWeightsProvider : IRelicWeightsProvider
+public sealed class RelicWeightsProvider : IRelicWeightsProvider
 {
     // key: character name
     private readonly Dictionary<string, CharacterRelicProfile> _characters;
@@ -17,7 +17,10 @@ internal class RelicWeightsProvider : IRelicWeightsProvider
     }
 
     // returns all weight profiles for all characters who have slot weights for this slotKey and consider this setName relevant for that slot
-    IReadOnlyList<IRelicWeightsProvider> IRelicWeightsProvider.GetProfile(string relicSetName, RelicSlot slotKey)
+    public IReadOnlyList<RelicWeightsProfile> GetProfiles(
+        string relicSetName,
+        RelicSlot slot
+    )
     {
         var results = new List<RelicWeightsProfile>();
 
@@ -26,21 +29,21 @@ internal class RelicWeightsProvider : IRelicWeightsProvider
             var characterKey = pair.Key;
             var profile = pair.Value;
 
-            if (!profile.Slots.TryGetValue(slotKey, out var slotWeights))
+            if (!profile.Slots.TryGetValue(slot, out var slotWeights))
                     continue;
 
-            if (!IsSetRelevantForSlot(profile, relicSetName, slotKey))
+            if (!IsSetRelevantForSlot(profile, relicSetName, slot))
                 continue;
 
             results.Add(CreateWeightsProfile(
                 characterKey,
                 relicSetName,
-                slotKey,
+                slot,
                 profile,
                 slotWeights));
         }
 
-        return (IReadOnlyList<IRelicWeightsProvider>)results;
+        return results;
     }
 
     private bool IsSetRelevantForSlot(CharacterRelicProfile profile, string setName, RelicSlot slotKey)

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using HSR_Overlay.Util;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
 
 namespace HSR_Overlay.Services.Analysis;
 
@@ -55,8 +57,15 @@ internal class RelicTextParser : IRelicTextParser
             StringSplitOptions.RemoveEmptyEntries)
             );
 
+        foreach (var line in lines)
+        {
+            Log.Debug("abc", line.ToString());
+        }
+
         // remove special characters from ocr trying to read symbols
         lines = CleanTextPrefixes(lines);
+
+        Log.Debug("abc", lines.ToString());
 
         // Remove unnecessary additional lines
         if (lines[lines.Count - 1].StartsWith("2-P"))
@@ -199,48 +208,34 @@ internal class RelicTextParser : IRelicTextParser
 
     private static List<string> CleanTextPrefixes(List<String> lines)
     {
-        List<string> endpoints =
-        [
-            "hp",
-            "atk",
-            "def",
-            "crit",
-            "effect",
-            "spd",
-            "break",
-        ];
+        var cleaned = new List<string>(lines.Count);
 
-        List<string> linesCleaned = new(lines.Count);
+        // Combined rule: allow symbol prefixes OR up to 2 letters
+        var statRegex = new Regex(
+            @"^\s*(?:[^a-zA-Z]+|[A-Za-z]{1,2})\s*(hp|atk|def|crit|effect|spd|break)\b",
+            RegexOptions.IgnoreCase);
 
-        foreach (string line in lines)
+        foreach (var line in lines)
         {
-            int earliestIndex = -1;
+            var m = statRegex.Match(line);
 
-            foreach (var endpoint in endpoints)
+            // Not a stat line → keep it untouched
+            if (!m.Success)
             {
-                int idx = line.IndexOf(endpoint, StringComparison.OrdinalIgnoreCase);
-
-                if (idx >= 0 && (earliestIndex == -1 || idx < earliestIndex))
-                {
-                    earliestIndex = idx;
-                }
-            }
-
-            if (earliestIndex == -1)
-            {
-                linesCleaned.Add(line);
+                cleaned.Add(line);
                 continue;
             }
 
-            string prefix = line[..earliestIndex];
-            string suffix = line[earliestIndex..];
+            // Extract the matched stat token
+            string stat = m.Groups[1].Value;
 
-            var goodPrefix = new string(prefix.Where(c => !IsSpecial(c)).ToArray());
+            // Remainder of the line after the stat token
+            string rest = line.Substring(m.Index + m.Length).TrimStart();
 
-            linesCleaned.Add(goodPrefix + suffix);
+            cleaned.Add($"{stat} {rest}");
         }
 
-        return linesCleaned;
+        return cleaned;
     }
 
     private static bool IsSpecial(char c)

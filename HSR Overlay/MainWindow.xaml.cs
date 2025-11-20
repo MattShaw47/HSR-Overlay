@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.IO;
 using HSR_Overlay.Services.Capture;
 using System;
 using System.Drawing;
@@ -146,8 +147,12 @@ public partial class MainWindow : Window
         WireRuntimeEvents();
 
         // database / relic parser initialization
-        _relicPieceDb = RelicPieceDatabase.Load("/data/relicNames.json");
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string jsonPath = System.IO.Path.Combine(baseDir, "data", "relicNames.json");
+        _relicPieceDb = RelicPieceDatabase.Load(jsonPath);
         _relicTextParser = new RelicTextParser(_relicPieceDb);
+        var emptyProfiles = new Dictionary<string, CharacterRelicProfile>();
+        _relicWeightsProvider = new RelicWeightsProvider(emptyProfiles);
         // load character profiles here as well
         // load stored relic inventory
 
@@ -485,13 +490,16 @@ public partial class MainWindow : Window
 
             // TODO REPLACE LAST ARG WITH THE ACTUAL COMPARISON RELIC
             List<RelicEvaluation> relicEvaluations = RelicAnalyzer.Analyze(foundRelic, _relicWeightsProvider, _relicPieceDb, new ParsedRelic());
-            
+
+            Log.Debug("raw text", text);
+
             // once the list of relic evaluations is returned, process into string and display on popup.
+            string relicText = foundRelic.MainStat.ToString() + foundRelic.MainStatValue.ToString() + "\n" + foundRelic.Substats[0].ToString() + foundRelic.Substats[0].Value.ToString();
 
             Dispatcher.Invoke(() =>
             {
                 if (Settings.Current.EnableRelicPopup)
-                    _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : text);
+                    _popup.Update(string.IsNullOrWhiteSpace(text) ? "No text found." : relicText);
             });
         }
         finally

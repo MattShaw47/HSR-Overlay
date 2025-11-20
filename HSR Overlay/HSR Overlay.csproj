@@ -13,6 +13,10 @@
 	<None Include="tessdata\**\*">
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
+	<None Remove="data\relicNames.json" />
+	<Content Include="data\relicNames.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
     <PackageReference Include="Tesseract" Version="5.2.0" />

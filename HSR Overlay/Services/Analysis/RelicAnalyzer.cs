@@ -13,13 +13,13 @@ public static class RelicAnalyzer
 {
     public static List<RelicEvaluation> Analyze(ParsedRelic relic, IRelicWeightsProvider weights, RelicPieceDatabase pieceDb, ParsedRelic comparisonPiece)
     {
-        IReadOnlyList<IRelicWeightsProvider> weightList = weights.GetProfile(relic.Set, relic.Slot);
+        IReadOnlyList<RelicWeightsProfile> weightList = weights.GetProfiles(relic.Set, relic.Slot);
 
         List<RelicEvaluation> evaluations = [];
 
-        foreach (var weightProvider in weightList)
+        foreach (var weightProfile in weightList)
         {
-            evaluations.Add(CompareRelic(relic, comparisonPiece, weightProvider));
+            evaluations.Add(CompareRelic(relic, comparisonPiece, weightProfile));
         }
 
         // send to text parser
@@ -29,7 +29,7 @@ public static class RelicAnalyzer
         return evaluations;
     }
 
-    private static RelicEvaluation CompareRelic(ParsedRelic newRelic, ParsedRelic comparisonPiece, IRelicWeightsProvider weights)
+    private static RelicEvaluation CompareRelic(ParsedRelic newRelic, ParsedRelic comparisonPiece, RelicWeightsProfile weights)
     {
         // not implemented yet
         return new RelicEvaluation

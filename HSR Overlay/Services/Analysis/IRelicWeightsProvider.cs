@@ -8,8 +8,8 @@ namespace HSR_Overlay.Services.Analysis;
 
 public interface IRelicWeightsProvider
 {
-    IReadOnlyList<IRelicWeightsProvider> GetProfile(
+    IReadOnlyList<RelicWeightsProfile> GetProfiles(
         string relicSetName,
-        RelicSlot slotKey
+        RelicSlot slot
         );
 }
