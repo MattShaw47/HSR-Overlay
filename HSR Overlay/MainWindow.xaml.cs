@@ -22,6 +22,7 @@ using HSR_Overlay.Services.Ocr;
 using MBrushes = System.Windows.Media.Brushes;
 using WPoint = System.Windows.Point;
 using DRectangle = System.Drawing.Rectangle;
+using HSR_Overlay.Services.Analysis;
 
 namespace HSR_Overlay;
 
@@ -62,6 +63,10 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, Action<CaptureService.FrameInfo>> _probeActivatedHandlers = new();
 
     private Settings _settingsDraft = new();
+
+    private IRelicTextParser _relicTextParser;
+    private IRelicWeightsProvider _relicWeightsProvider;
+    private RelicPieceDatabase _relicPieceDb;
 
     public MainWindow()
     {
@@ -139,6 +144,12 @@ public partial class MainWindow : Window
         ));
 
         WireRuntimeEvents();
+
+        // database / relic parser initialization
+        _relicPieceDb = RelicPieceDatabase.Load("/data/relicNames.json");
+        _relicTextParser = new RelicTextParser(_relicPieceDb);
+        // load character profiles here as well
+        // load stored relic inventory
 
         // periodic ocr while relic modal is active
         _relicOcrTimer.Tick += (_, __) =>
@@ -470,7 +481,13 @@ public partial class MainWindow : Window
             using var bmp = _capture.CaptureRegionToBitmap(roi);
             string text = await OcrReader.ReadTextAsync(bmp);
 
-            // up to you: update popup text or route to another view
+            ParsedRelic foundRelic = _relicTextParser.Parse(text, new RelicTextContext(RelicTextSource.Farming));
+
+            // TODO REPLACE LAST ARG WITH THE ACTUAL COMPARISON RELIC
+            List<RelicEvaluation> relicEvaluations = RelicAnalyzer.Analyze(foundRelic, _relicWeightsProvider, _relicPieceDb, new ParsedRelic());
+            
+            // once the list of relic evaluations is returned, process into string and display on popup.
+
             Dispatcher.Invoke(() =>
             {
                 if (Settings.Current.EnableRelicPopup)
@@ -488,7 +505,7 @@ public partial class MainWindow : Window
     private static DRectangle GetRelicOcrScreenRect(CaptureService.FrameInfo f)
     {
         // Example normalized box; replace with the actual area you want
-        const double nx = 0.41, ny = 0.35, nw = 0.4, nh = 0.4;
+        const double nx = 0.41, ny = 0.31, nw = 0.4, nh = 0.285;
 
         int x = f.OriginX + (int)(nx * f.ClientWidth);
         int y = f.OriginY + (int)(ny * f.ClientHeight);
