@@ -1,0 +1,186 @@
+﻿{
+  "substats": [
+    {
+      "Stat": "HpFlat",
+      "Low": 33.87,
+      "Med": 38.103755,
+      "High": 42.33751,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "Speed",
+      "Low": 2.0,
+      "Med": 2.3,
+      "High": 2.6,
+      "AppearanceWeight": 4
+    },
+    {
+      "Stat": "AtkFlat",
+      "Low": 16.935,
+      "Med": 19.051877,
+      "High": 21.168754,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "DefFlat",
+      "Low": 16.935,
+      "Med": 19.051877,
+      "High": 21.168754,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "HpPercent",
+      "Low": 3.456,
+      "Med": 3.888,
+      "High": 4.32,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "AtkPercent",
+      "Low": 3.456,
+      "Med": 3.888,
+      "High": 4.32,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "DefPercent",
+      "Low": 4.32,
+      "Med": 4.86,
+      "High": 5.4,
+      "AppearanceWeight": 10
+    },
+    {
+      "Stat": "BreakEffect",
+      "Low": 5.184,
+      "Med": 5.832,
+      "High": 6.48,
+      "AppearanceWeight": 8
+    },
+    {
+      "Stat": "EffectHitRate",
+      "Low": 3.456,
+      "Med": 3.888,
+      "High": 4.32,
+      "AppearanceWeight": 8
+    },
+    {
+      "Stat": "EffectRes",
+      "Low": 3.456,
+      "Med": 3.888,
+      "High": 4.32,
+      "AppearanceWeight": 0
+    },
+    {
+      "Stat": "CritRate",
+      "Low": 2.592,
+      "Med": 2.916,
+      "High": 3.24,
+      "AppearanceWeight": 6
+    },
+    {
+      "Stat": "CritDamage",
+      "Low": 5.184,
+      "Med": 5.832,
+      "High": 6.48,
+      "AppearanceWeight": 6
+    }
+
+  ],
+  "MainStats": [
+    {
+      "Stat": "HpPercent",
+      "MaxValue": 43.2,
+      "EquivalentSubstat": "HpPercent"
+    },
+    {
+      "Stat": "Speed",
+      "MaxValue": 25.032,
+      "EquivalentSubstat": "Speed"
+    },
+    {
+      "Stat": "HpFlat",
+      "MaxValue": 705.6,
+      "EquivalentSubstat": "HpFlat"
+    },
+    {
+      "Stat": "AtkFlat",
+      "MaxValue": 352.8,
+      "EquivalentSubstat": "AtkFlat"
+    },
+    {
+      "Stat": "AtkPercent",
+      "MaxValue": 43.2,
+      "EquivalentSubstat": "AtkPercent"
+    },
+    {
+      "Stat": "DefPercent",
+      "MaxValue": 54,
+      "EquivalentSubstat": "DefPercent"
+    },
+    {
+      "Stat": "BreakEffect",
+      "MaxValue": 64.8,
+      "EquivalentSubstat": "BreakEffect"
+    },
+    {
+      "Stat": "EffectHitRate",
+      "MaxValue": 43.2,
+      "EquivalentSubstat": "EffectHitRate"
+    },
+    {
+      "Stat": "EnergyRegen",
+      "MaxValue": 19.4394,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "OutgoingHealingBoost",
+      "MaxValue": 34.5606,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "CritRate",
+      "MaxValue": 32.4,
+      "EquivalentSubstat": "CritRate"
+    },
+    {
+      "Stat": "CritDamage",
+      "MaxValue": 64.8,
+      "EquivalentSubstat": "CritDamage"
+    },
+    {
+      "Stat": "PhysicalDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "FireDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "IceDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "WindDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "LightningDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "QuantumDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    },
+    {
+      "Stat": "ImaginaryDMGBoost",
+      "MaxValue": 38.8803,
+      "EquivalentRolls": 10
+    }
+  ]
+}
