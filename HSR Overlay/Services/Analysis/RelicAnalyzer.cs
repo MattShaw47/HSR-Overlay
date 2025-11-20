@@ -30,7 +30,7 @@ public static class RelicAnalyzer
             var probability = RelicUpgradeSimulator.ProbabilityBeatsReference(
                 candidate: relic,
                 candidateLevel: 0,
-                referenceRelic: comparisonRelic,
+                referenceRelic: new ParsedRelic(),
                 profile: weightProfile,
                 tables: tables,
                 trials: 5_000);
