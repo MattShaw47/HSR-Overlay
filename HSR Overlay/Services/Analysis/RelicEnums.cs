@@ -34,7 +34,15 @@ public enum Stat
     BreakEffect,
     EnergyRegen,
     EffectHitRate,
-    EffectRes
+    EffectRes,
+    OutgoingHealingBoost,
+    PhysicalDMGBoost,
+    FireDMGBoost,
+    IceDMGBoost,
+    WindDMGBoost,
+    LightningDMGBoost,
+    QuantumDMGBoost,
+    ImaginaryDMGBoost
 }
 
 public enum RelicTextSource
