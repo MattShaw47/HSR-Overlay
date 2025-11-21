@@ -41,13 +41,17 @@ public sealed class RelicPieceDatabase
     /// </summary>
     public (string Set, RelicSlot Slot)? IdentifyRelicByName(string cleanedName)
     {
+        cleanedName = NormalizeRelicName(cleanedName);
+
         foreach (var (setName, slotMap) in Sets)
         {
             foreach (var (slotKey, pieces) in slotMap)
             {
                 foreach (var pieceName in pieces)
                 {
-                    if (cleanedName.Contains(pieceName, StringComparison.OrdinalIgnoreCase))
+                    var normPiece = NormalizeRelicName(pieceName);
+
+                    if (cleanedName.Contains(normPiece, StringComparison.OrdinalIgnoreCase))
                     {
                         var slot = SlotKeyToEnum(slotKey);
                         return (setName, slot);
@@ -71,5 +75,19 @@ public sealed class RelicPieceDatabase
             "rope" => RelicSlot.Rope,
             _ => RelicSlot.None
         };
+    }
+
+    private static string NormalizeRelicName(string? s)
+    {
+        if (string.IsNullOrEmpty(s))
+            return string.Empty;
+
+        // unify fancy apostrophes into a normal ASCII '
+        s = s
+            .Replace('\u2019', '\'') // ’
+            .Replace('\u2018', '\'') // ‘
+            .Replace('\u02BC', '\''); // ʼ
+
+        return s;
     }
 }

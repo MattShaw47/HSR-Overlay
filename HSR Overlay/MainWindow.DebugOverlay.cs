@@ -31,14 +31,24 @@ public partial class MainWindow
         RenderDebugOverlay();
     }
 
-    private void DrawOcrRect(DRectangle roi)
+    private void DrawOcrRects(DRectangle[] rects)
     {
         if (!Settings.Current.DebugVisualizationEnabled) return;
-        if (roi.Width <= 0 || roi.Height <= 0) return;
+        //if (roi.Width <= 0 || roi.Height <= 0) return;
 
-        _lastOcrRect = roi;
-        RenderDebugOverlay();
+        _lastOcrRects.Clear();
+
+        foreach (var r in rects)
+        {
+            if (r.Width <= 0 || r.Height <= 0) continue;
+            _lastOcrRects.Add(r);
+        }
+
+        //if (_lastOcrRects.Count > 0)
+            RenderDebugOverlay();
     }
+
+    private void DrawOcrRect(DRectangle roi) => DrawOcrRects(new DRectangle[] { roi });
 
     private void RenderDebugOverlay()
     {
@@ -71,25 +81,34 @@ public partial class MainWindow
                 }
             }
 
-            // OCR rectangle
-            if (_lastOcrRect.Width > 0 && _lastOcrRect.Height > 0)
+            // OCR rectangles
+            if (_lastOcrRects != null && _lastOcrRects.Count > 0)
             {
-                var topLeft = PointFromScreen(new WPoint(_lastOcrRect.Left, _lastOcrRect.Top));
-                var bottomRight = PointFromScreen(new WPoint(_lastOcrRect.Right, _lastOcrRect.Bottom));
-
-                var rect = new Rectangle
+                foreach (var roi in _lastOcrRects)
                 {
-                    Width = Math.Max(0, bottomRight.X - topLeft.X),
-                    Height = Math.Max(0, bottomRight.Y - topLeft.Y),
-                    StrokeThickness = 2,
-                    Stroke = MBrushes.Yellow,
-                    Fill = Brushes.Transparent,
-                    IsHitTestVisible = false
-                };
+                    if (roi.Width <= 0 || roi.Height <= 0)
+                        continue;
 
-                Canvas.SetLeft(rect, topLeft.X);
-                Canvas.SetTop(rect, topLeft.Y);
-                ProbeLayer.Children.Add(rect);
+                    var topLeft = PointFromScreen(new WPoint(roi.Left, roi.Top));
+                    var bottomRight = PointFromScreen(new WPoint(roi.Right, roi.Bottom));
+
+                    var w = Math.Max(0, bottomRight.X - topLeft.X);
+                    var h = Math.Max(0, bottomRight.Y - topLeft.Y);
+
+                    var rect = new Rectangle
+                    {
+                        Width = w,
+                        Height = h,
+                        StrokeThickness = 2,
+                        Stroke = MBrushes.Yellow,
+                        Fill = Brushes.Transparent,
+                        IsHitTestVisible = false
+                    };
+
+                    Canvas.SetLeft(rect, topLeft.X);
+                    Canvas.SetTop(rect, topLeft.Y);
+                    ProbeLayer.Children.Add(rect);
+                }
             }
         });
     }

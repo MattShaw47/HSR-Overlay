@@ -12,6 +12,22 @@ namespace HSR_Overlay.Services.Analysis;
 
 internal class RelicTextParser : IRelicTextParser
 {
+    private static readonly HashSet<string> StatKeywords =
+    new(StringComparer.OrdinalIgnoreCase)
+    {
+        "hp",
+        "atk",
+        "def",
+        "spd",
+        "crit",
+        "effect",
+        "break",
+        "res",
+        "energy",
+        "healing",
+        "outgoing"
+    };
+
     private readonly RelicPieceDatabase _pieces;
 
     public RelicTextParser(RelicPieceDatabase pieces)
@@ -42,38 +58,96 @@ internal class RelicTextParser : IRelicTextParser
     private List<string> CleanFromFarming(string text)
     {
         // to lower case
-        text = text.ToLower();
+        text = text.ToLowerInvariant();
 
         // normalize line endings
         text = text.Replace("\r\n", "\n");
 
-        // remove random whitespace
-        text = Regex.Replace(text, @"[  ]{2,}", " ");
+        // collapse random extra spaces
+        text = Regex.Replace(text, @"[ ]{2,}", " ");
         text = text.Trim();
 
         // split into list of strings by \n
         List<string> lines = new(
-            text.Split(new string[] { "\n" },
-            StringSplitOptions.RemoveEmptyEntries)
-            );
+            text.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries));
 
-        foreach (var line in lines)
-        {
-            Log.Debug("abc", line.ToString());
-        }
-
-        // remove special characters from ocr trying to read symbols
+        // remove OCR junk prefixes (@, &, etc.)
         lines = CleanTextPrefixes(lines);
 
-        Log.Debug("abc", lines.ToString());
+        if (lines.Count == 0)
+            return lines;
 
-        // Remove unnecessary additional lines
-        if (lines[lines.Count - 1].StartsWith("2-P"))
-            lines.RemoveAt(lines.Count - 1);
+        // --- remove set name + 2-pc line (if present) ---
 
-        lines.RemoveAt((lines.Count - 1));
+        // look for a "2-pc" description line anywhere
+        int twoPcIndex = lines.FindIndex(l => l.Contains("2-pc"));
 
-        return lines;
+        if (twoPcIndex >= 1)
+        {
+            // remove 2-pc line and the immediately preceding set-name line
+            // remove higher index first so indices stay valid
+            lines.RemoveAt(twoPcIndex);       // "2-pc: increases spd by 6%."
+            lines.RemoveAt(twoPcIndex - 1);   // "sacerdos' relived ordeal"
+        }
+        else
+        {
+            // no 2-pc line: layout 1 case, trailing line is usually just set name
+            // (no digits, unlike stat lines which all contain numbers)
+            if (lines.Count > 1 && !HasDigit(lines[^1]))
+            {
+                lines.RemoveAt(lines.Count - 1);
+            }
+        }
+
+        if (lines.Count <= 1)
+            return lines;
+
+        string nameLine = lines[0];
+
+        // --- detect "split numbers" layout ---
+
+        // find the first line that looks like a standalone number / percentage
+        int firstNumericIndex = -1;
+        for (int i = 1; i < lines.Count; i++)
+        {
+            if (IsStandaloneNumber(lines[i]))
+            {
+                firstNumericIndex = i;
+                break;
+            }
+        }
+
+        // if no pure-number block, we’re in the original layout:
+        // [name, "hp 112", "def 21", ...] → just return as-is
+        if (firstNumericIndex == -1)
+            return lines;
+
+        // Otherwise: lines[1..firstNumericIndex-1] are stat labels,
+        // lines[firstNumericIndex..] are numeric values.
+        var statLabels = lines.GetRange(1, firstNumericIndex - 1);
+        var statValues = lines.GetRange(firstNumericIndex, lines.Count - firstNumericIndex);
+
+        int pairCount = Math.Min(statLabels.Count, statValues.Count);
+
+        var merged = new List<string>(capacity: 1 + pairCount)
+    {
+        nameLine
+    };
+
+        for (int i = 0; i < pairCount; i++)
+        {
+            // e.g. "hp" + "112" -> "hp 112"
+            //      "effect res" + "4.3%" -> "effect res 4.3%"
+            string stat = statLabels[i].Trim();
+            string value = statValues[i].Trim();
+
+            if (string.IsNullOrEmpty(stat) || string.IsNullOrEmpty(value))
+                continue;
+
+            merged.Add($"{stat} {value}");
+        }
+
+        return merged;
     }
 
     private static ParsedRelic StringToParsedRelic(List<string> lines, RelicPieceDatabase pieceDb)
@@ -208,38 +282,65 @@ internal class RelicTextParser : IRelicTextParser
 
     private static List<string> CleanTextPrefixes(List<String> lines)
     {
-        var cleaned = new List<string>(lines.Count);
+        var result = new List<string>(lines.Count);
 
-        // Combined rule: allow symbol prefixes OR up to 2 letters
-        var statRegex = new Regex(
-            @"^\s*(?:[^a-zA-Z]+|[A-Za-z]{1,2})\s*(hp|atk|def|crit|effect|spd|break)\b",
-            RegexOptions.IgnoreCase);
-
-        foreach (var line in lines)
+        foreach (var raw in lines)
         {
-            var m = statRegex.Match(line);
-
-            // Not a stat line → keep it untouched
-            if (!m.Success)
-            {
-                cleaned.Add(line);
+            var line = raw?.Trim();
+            if (string.IsNullOrWhiteSpace(line))
                 continue;
+
+            var tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            if (tokens.Count >= 2)
+            {
+                string first = tokens[0].TrimEnd(',', '.');
+                string second = tokens[1].TrimEnd(',', '.');
+
+                // if the second token looks like a stat keyword,
+                // and the first token is short junk (len <= 3 and not itself a keyword),
+                // drop the first token.
+                if (first.Length <= 3 &&
+                    !StatKeywords.Contains(first) &&
+                    StatKeywords.Contains(second))
+                {
+                    tokens.RemoveAt(0);
+                }
             }
 
-            // Extract the matched stat token
-            string stat = m.Groups[1].Value;
+            line = string.Join(' ', tokens);
 
-            // Remainder of the line after the stat token
-            string rest = line.Substring(m.Index + m.Length).TrimStart();
-
-            cleaned.Add($"{stat} {rest}");
+            result.Add(line);
         }
 
-        return cleaned;
+        return result;
     }
 
-    private static bool IsSpecial(char c)
+    private static bool HasDigit(string s)
     {
-        return !char.IsLetterOrDigit(c);
+        foreach (char c in s)
+        {
+            if (char.IsDigit(c)) return true;
+        }
+        return false;
+    }
+
+    private static bool IsStandaloneNumber(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s))
+            return false;
+
+        s = s.Trim();
+
+        // strip leading '+' / '-' and trailing '%'
+        if (s.StartsWith("+") || s.StartsWith("-"))
+            s = s.Substring(1).TrimStart();
+
+        if (s.EndsWith("%"))
+            s = s.Substring(0, s.Length - 1).TrimEnd();
+
+        return double.TryParse(s,
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out _);
     }
 }

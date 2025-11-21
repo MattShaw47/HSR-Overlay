@@ -55,6 +55,7 @@ public partial class MainWindow : Window
     private readonly CaptureService _capture = new();
     private bool _showProbeMarkers = true;
     private IEnumerable<SentinelDebugPoint>? _lastSentinelDebug;
+    private readonly List<DRectangle> _lastOcrRects = new();
     private DRectangle _lastOcrRect;
     private bool _hasOcrRect;
 
