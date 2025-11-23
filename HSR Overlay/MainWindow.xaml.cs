@@ -24,6 +24,7 @@ using MBrushes = System.Windows.Media.Brushes;
 using WPoint = System.Windows.Point;
 using DRectangle = System.Drawing.Rectangle;
 using HSR_Overlay.Services.Analysis;
+using HSR_Overlay.Ui.Modules;
 
 namespace HSR_Overlay;
 
@@ -37,6 +38,16 @@ public partial class MainWindow : Window
 
     private IntPtr _hwnd; // overlay hwnd
     private IntPtr _gameHwnd; // game hwnd
+
+    private int HOTKEY_ID_MENU = 1;
+
+    private readonly OverlayMenuViewModel _overlayMenu;
+    private readonly Dictionary<ModuleCategory, CategoryPanelView> _categoryPanels = new();
+    private bool _menuVisible;
+
+    private bool _draggingMenu;
+    private WPoint _menuDragStart;
+    private Thickness _menuStartMargin;
 
     private readonly GameLocator _locator = new(GameProcessName, GameWindowTitleHint);
     private readonly ZOrderController _zOrder = new();
@@ -76,6 +87,9 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _popup = new RelicPopupController(RelicPopup, RelicText);
+
+        _overlayMenu = new OverlayMenuViewModel(ApplySettingsToRuntime, ToggleCategoryPanel);
+        OverlayMenuHost.DataContext = _overlayMenu;
 
         _tracker = new OverlayTracker(
             getDpi: () => Win32.GetDpiForWindow(_hwnd),
@@ -120,6 +134,8 @@ public partial class MainWindow : Window
         Settings.Load();
         ApplySettingsToRuntime();
         _showProbeMarkers = Settings.Current.DebugVisualizationEnabled;
+
+        _overlayMenu.BuildDefaultModules();
 
         // 3) initial game hwnd + start trackers
         _gameHwnd = _locator.FindGameWindow();
@@ -182,7 +198,7 @@ public partial class MainWindow : Window
         _fgWatcher.Start();
 
         // 7) UI buttons
-        GearButtonHost.MouseLeftButtonUp += (_, __) => ToggleConfigPanel();
+        GearButtonHost.MouseLeftButtonUp += (_, __) => ToggleOverlayMenu();
         BtnSave.Click += (_, __) =>
         {
             Settings.Current.CopyFrom(_settingsDraft);
@@ -201,7 +217,9 @@ public partial class MainWindow : Window
         _captureTimer.Stop();
         _fgWatcher.Dispose();
         _capture.Dispose();
+        base.OnClosed(e);
     }
+
     private void ApplySettingsToRuntime()
     {
         Log.Debug("Settings", "Attempting to apply settings.");
@@ -218,6 +236,38 @@ public partial class MainWindow : Window
 
         // Logger level
         Log.Init(min: Settings.Current.LogLevel);
+    }
+
+    private void OverlayMenuHeader_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState != MouseButtonState.Pressed) return;
+
+        _draggingMenu = true;
+        _menuDragStart = e.GetPosition(this);
+        _menuStartMargin = OverlayMenuHost.Margin;
+        Mouse.Capture((IInputElement)sender);
+    }
+
+    private void Window_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_draggingMenu) return;
+
+        var pos = e.GetPosition(this);
+        var dx = pos.X - _menuDragStart.X;
+        var dy = pos.Y - _menuDragStart.Y;
+
+        OverlayMenuHost.Margin = new Thickness(
+            _menuStartMargin.Left + dx,
+            _menuStartMargin.Top + dy,
+            0,
+            0);
+    }
+
+    private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_draggingMenu) return;
+        _draggingMenu = false;
+        Mouse.Capture(null);
     }
 
     private void TrackGameWindow()

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:overlay="clr-namespace:HSR_Overlay.Util"
-        xmlns:mel="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions"
+        xmlns:mel="clr-namespace:Microsoft.Extensions.Logging;assembly=Microsoft.Extensions.Logging.Abstractions" xmlns:modules="clr-namespace:HSR_Overlay.Ui.Modules" d:DataContext="{d:DesignInstance Type=modules:OverlayMenuViewModel}"
         mc:Ignorable="d"
         Title="HSR Overlay"
         WindowStyle="None"
@@ -14,8 +14,11 @@
         ShowActivated="False"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        Width="800" Height="600">
+        Width="800" Height="600"
+        MouseMove="Window_MouseMove"
+        MouseLeftButtonUp="Window_MouseLeftButtonUp">
 
+    <!-- ========= RESOURCES ========= -->
     <Window.Resources>
         <!-- Dark palette -->
         <SolidColorBrush x:Key="PanelBg" Color="#CC101010"/>
@@ -38,7 +41,6 @@
             <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
         </Style>
 
-        <!-- Expander header should be white -->
         <Style TargetType="Expander">
             <Setter Property="Foreground" Value="{StaticResource WhiteText}"/>
         </Style>
@@ -52,7 +54,7 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- Dark ComboBox template: dark selection box + dark popup -->
+        <!-- Dark ComboBox template -->
         <Style TargetType="ComboBox">
             <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
             <Setter Property="Background" Value="{StaticResource InputBg}"/>
@@ -63,47 +65,46 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <!-- Selection box -->
+                            <!-- selection -->
                             <ToggleButton x:Name="ToggleButton"
-                        Grid.Column="2"
-                        Focusable="False"
-                        IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                        ClickMode="Press"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}">
+                                          Grid.Column="2"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}">
                                 <Grid>
                                     <Border x:Name="SelectionBackground"
-                      Background="{TemplateBinding Background}"
-                      BorderBrush="{TemplateBinding BorderBrush}"
-                      BorderThickness="{TemplateBinding BorderThickness}"
-                      CornerRadius="2"/>
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="2"/>
                                     <ContentPresenter Margin="6,2,24,2"
-                                Content="{TemplateBinding SelectionBoxItem}"
-                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Left"
-                                RecognizesAccessKey="True"
-                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                                TextElement.Foreground="{StaticResource TextOnDark}"/>
-                                    <!-- caret -->
-                                    <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                    Data="M 0 0 L 4 4 L 8 0 Z"
-                    Fill="{StaticResource TextOnDark}"/>
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Left"
+                                                      TextElement.Foreground="{StaticResource TextOnDark}"/>
+                                    <Path HorizontalAlignment="Right"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,8,0"
+                                          Data="M 0 0 L 4 4 L 8 0 Z"
+                                          Fill="{StaticResource TextOnDark}"/>
                                 </Grid>
                             </ToggleButton>
 
-                            <!-- Popup -->
+                            <!-- popup -->
                             <Popup x:Name="Popup"
-                 Placement="Bottom"
-                 IsOpen="{TemplateBinding IsDropDownOpen}"
-                 AllowsTransparency="True"
-                 Focusable="False"
-                 PopupAnimation="Slide">
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
                                 <Border Background="{StaticResource InputBg}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}">
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
                                     <ScrollViewer Margin="0" SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" />
                                     </ScrollViewer>
@@ -126,7 +127,6 @@
             </Setter>
         </Style>
 
-        <!-- Dark ComboBoxItem -->
         <Style TargetType="ComboBoxItem">
             <Setter Property="Background" Value="{StaticResource InputBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
@@ -142,7 +142,7 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Button dark style -->
+        <!-- Buttons -->
         <Style TargetType="Button">
             <Setter Property="Background" Value="{StaticResource ButtonBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextOnDark}"/>
@@ -159,7 +159,7 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Panel border look -->
+        <!-- Panel border -->
         <Style x:Key="PanelBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource PanelBg}"/>
             <Setter Property="CornerRadius" Value="8"/>
@@ -167,116 +167,194 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <!-- ========= LAYERS ========= -->
+    <Grid x:Name="RootGrid">
+
+        <!-- Vape-style overlay menu -->
+        <Border x:Name="OverlayMenuHost"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        Margin="20,80,0,0"
+        Visibility="Collapsed"
+        overlay:OverlayHitTest.IsInteractive="True"
+        Background="#AA101010"
+        CornerRadius="6">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Title -->
+                <Border Grid.Row="0"
+                Background="#CC202020"
+                Padding="6,3">
+                    <TextBlock Text="Settings"
+                       FontWeight="Bold"
+                       Foreground="White"/>
+                </Border>
+
+                <!-- Categories -->
+                <Border Grid.Row="1"
+                Background="#CC202020"
+                Padding="6,4,6,6">
+                    <ItemsControl ItemsSource="{Binding Categories}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.SelectCategoryCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                Margin="0,2"
+                                Padding="6,2">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#222222"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Style.Triggers>
+                                                <!-- Highlight while that category panel is open -->
+                                                <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                                    <Setter Property="Background" Value="#3355AAFF"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- Probe markers (click-through) -->
         <Canvas x:Name="ProbeLayer"
-            Visibility="Collapsed"
-            IsHitTestVisible="False"
-            Panel.ZIndex="9999"/>
+                Visibility="Collapsed"
+                IsHitTestVisible="False"
+                Panel.ZIndex="9999"/>
 
         <!-- Passive HUD -->
         <TextBlock Text="Overlay HUD"
-               FontSize="18"
-               HorizontalAlignment="Right"
-               VerticalAlignment="Top"
-               Margin="0,10,20,0"
-               Opacity="0.9"
-               IsHitTestVisible="False"/>
+                   FontSize="18"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Top"
+                   Margin="0,10,20,0"
+                   Opacity="0.9"
+                   IsHitTestVisible="False"/>
 
-        <!-- Relic popup -->
+        <!-- Relic popup (can scroll; not a menu) -->
         <Border x:Name="RelicPopup"
-            Visibility="Collapsed"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Center"
-            Margin="166,0,0,0"
-            Background="#AA000000"
-            CornerRadius="6"
-            Padding="8"
-            IsHitTestVisible="False">
-            <ScrollViewer MaxWidth="500"
-                          MaxHeight="350"
+                Visibility="Collapsed"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Margin="50,0,0,0"
+                Background="#AA000000"
+                CornerRadius="6"
+                Padding="8"
+                IsHitTestVisible="False">
+            <ScrollViewer MaxWidth="600"
+                          MaxHeight="450"
                           VerticalScrollBarVisibility="Auto">
                 <TextBlock x:Name="RelicText"
-                     Text="—"
-                     TextWrapping="Wrap"
-                     MaxWidth="520"
-                     FontSize="16"
-                     Foreground="White"
-                     Opacity="0.95"/>
+                           Text="—"
+                           TextWrapping="Wrap"
+                           MaxWidth="520"
+                           FontSize="16"
+                           Foreground="White"
+                           Opacity="0.95"/>
             </ScrollViewer>
         </Border>
 
         <!-- Gear button -->
         <Border x:Name="GearButtonHost"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Margin="12"
-            Padding="6"
-            CornerRadius="6"
-            Background="{StaticResource GearBg}"
-            overlay:OverlayHitTest.IsInteractive="True">
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="12"
+                Padding="6"
+                CornerRadius="6"
+                Background="{StaticResource GearBg}"
+                overlay:OverlayHitTest.IsInteractive="True">
             <TextBlock Text="⚙" FontSize="16" Foreground="CadetBlue"/>
         </Border>
 
-        <!-- Config panel -->
+        <!-- Original config panel (also draggable now) -->
         <Border x:Name="ConfigPanel"
-            Style="{StaticResource PanelBorderStyle}"
-            Visibility="Collapsed"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Margin="12,48,0,0"
-            overlay:OverlayHitTest.IsInteractive="True">
+                Style="{StaticResource PanelBorderStyle}"
+                Visibility="Collapsed"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="320,80,0,0"
+                overlay:OverlayHitTest.IsInteractive="True">
 
-            <StackPanel Width="280">
-                <TextBlock Text="Overlay Settings" FontSize="14" FontWeight="Bold" Margin="0,0,0,8"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                <CheckBox Content="Enable relic popup"
-                  IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+                <!-- Header / drag handle -->
+                <Border Grid.Row="0"
+                        Background="#CC202020"
+                        Padding="6,3"
+                        Margin="-12,-12,-12,8"
+                        CornerRadius="6,6,0,0"
+                        MouseLeftButtonDown="OverlayMenuHeader_MouseLeftButtonDown">
+                    <TextBlock Text="Overlay Settings"
+                               FontWeight="Bold"
+                               Foreground="White"/>
+                </Border>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <TextBlock Text="Capture interval (ms):" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBox Width="80" Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
-                </StackPanel>
+                <!-- Body -->
+                <StackPanel Grid.Row="1" Width="280">
+                    <CheckBox Content="Enable relic popup"
+                              IsChecked="{Binding EnableRelicPopup, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <TextBlock Text="Log level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox Width="130"
-                            SelectedValue="{Binding LogLevel, Mode=TwoWay}"
-                            SelectedValuePath="Tag">
-                        <ComboBox.Resources>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#222"/>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="White"/>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3A6EA5"/>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#222"/>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="White"/>
-                        </ComboBox.Resources>
-
-                        <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}"/>
-                        <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}"/>
-                        <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}"/>
-                        <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}"/>
-                        <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <Expander Header="Developer" Margin="0,8,0,0">
-                    <StackPanel>
-                        <CheckBox Content="Show debug visuals"
-                      IsChecked="{Binding DebugVisualizationEnabled, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                            <TextBlock Text="Required hit ratio:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Width="70"
-                       Text="{Binding RequiredHitRatio, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=F2}"/>
-                            <TextBlock Text=" (0–1)" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                        </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Capture interval (ms):" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Width="80" Text="{Binding CaptureIntervalMs, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
                     </StackPanel>
-                </Expander>
 
-                <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
-                    <Button x:Name="BtnSave" Content="Save" overlay:OverlayHitTest.IsInteractive="True"/>
-                    <Button x:Name="BtnClose" Content="Cancel" Margin="8,0,0,0" overlay:OverlayHitTest.IsInteractive="True"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Log level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox Width="130"
+                                  SelectedValue="{Binding LogLevel, Mode=TwoWay}"
+                                  SelectedValuePath="Tag">
+                            <ComboBox.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#222"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="White"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#3A6EA5"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#222"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="White"/>
+                            </ComboBox.Resources>
+
+                            <ComboBoxItem Content="Trace" Tag="{x:Static mel:LogLevel.Trace}"/>
+                            <ComboBoxItem Content="Debug" Tag="{x:Static mel:LogLevel.Debug}"/>
+                            <ComboBoxItem Content="Info"  Tag="{x:Static mel:LogLevel.Information}"/>
+                            <ComboBoxItem Content="Warn"  Tag="{x:Static mel:LogLevel.Warning}"/>
+                            <ComboBoxItem Content="Error" Tag="{x:Static mel:LogLevel.Error}"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <Expander Header="Developer" Margin="0,8,0,0">
+                        <StackPanel>
+                            <CheckBox Content="Show debug visuals"
+                                      IsChecked="{Binding DebugVisualizationEnabled, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock Text="Required hit ratio:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox Width="70"
+                                         Text="{Binding RequiredHitRatio, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat=F2}"/>
+                                <TextBlock Text=" (0–1)" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Right">
+                        <Button x:Name="BtnSave" Content="Save" overlay:OverlayHitTest.IsInteractive="True"/>
+                        <Button x:Name="BtnClose" Content="Cancel" Margin="8,0,0,0" overlay:OverlayHitTest.IsInteractive="True"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </Border>
+
     </Grid>
 </Window>
