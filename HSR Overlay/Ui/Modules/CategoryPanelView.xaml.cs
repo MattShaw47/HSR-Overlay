@@ -27,38 +27,54 @@ public partial class CategoryPanelView : UserControl
     public CategoryPanelView()
     {
         InitializeComponent();
-        Root.MouseMove += Root_MouseMove;
-        Root.MouseLeftButtonUp += Root_MouseLeftButtonUp;
+
+        // We can handle move/up on the whole control
+        this.MouseMove += CategoryPanelView_MouseMove;
+        this.MouseLeftButtonUp += CategoryPanelView_MouseLeftButtonUp;
     }
 
+    // Header is the title bar Border in XAML
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState != MouseButtonState.Pressed) return;
+        if (e.ButtonState != MouseButtonState.Pressed)
+            return;
+
+        var parent = Parent as FrameworkElement;
+        if (parent == null)
+            return;
 
         _dragging = true;
-        _dragStart = e.GetPosition((UIElement)(Parent ?? this));
-        _startMargin = Root.Margin;
-        Mouse.Capture(Root);
+        _dragStart = e.GetPosition(parent);
+        _startMargin = this.Margin;
+
+        Mouse.Capture(this);
     }
 
-    private void Root_MouseMove(object? sender, MouseEventArgs e)
+    private void CategoryPanelView_MouseMove(object? sender, MouseEventArgs e)
     {
-        if (!_dragging) return;
+        if (!_dragging)
+            return;
 
-        var current = e.GetPosition((UIElement)(Parent ?? this));
+        var parent = Parent as FrameworkElement;
+        if (parent == null)
+            return;
+
+        var current = e.GetPosition(parent);
         var dx = current.X - _dragStart.X;
         var dy = current.Y - _dragStart.Y;
 
-        Root.Margin = new Thickness(
+        this.Margin = new Thickness(
             _startMargin.Left + dx,
             _startMargin.Top + dy,
             0,
             0);
     }
 
-    private void Root_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
+    private void CategoryPanelView_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
     {
-        if (!_dragging) return;
+        if (!_dragging)
+            return;
+
         _dragging = false;
         Mouse.Capture(null);
     }
