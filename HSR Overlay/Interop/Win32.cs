@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -56,4 +57,32 @@ internal static class Win32
         int written = GetWindowTextW(hWnd, sb, sb.Capacity);
         return written > 0 ? sb.ToString() : string.Empty;
     }
+}
+
+internal static class HotKeyNative
+{
+    public const int WM_HOTKEY = 0x0312;
+
+    [Flags]
+    public enum Modifiers : uint
+    {
+        None = 0x0000,
+        Alt = 0x0001,
+        Ctrl = 0x0002,
+        Shift = 0x0004,
+        Win = 0x0008,
+        NoRepeat = 0x4000
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool RegisterHotKey(
+        IntPtr hWnd,
+        int id,
+        Modifiers fsModifiers,
+        uint vk);
+
+    [DllImport("user32.dll")]
+    public static extern bool UnregisterHotKey(
+        IntPtr hWnd,
+        int id);
 }
