@@ -48,5 +48,6 @@ public enum Stat
 public enum RelicTextSource
 {
     CharacterScreen,
-    Farming
+    Farming,
+    CharacterName
 }
