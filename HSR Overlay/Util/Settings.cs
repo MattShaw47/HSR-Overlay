@@ -26,6 +26,18 @@ public sealed class Settings : INotifyPropertyChanged
         set { if (_enableRelicPopup == value) return; _enableRelicPopup = value; OnChanged(nameof(EnableRelicPopup)); }
     }
 
+    private bool _showRelicFoundIndicator = true;
+    public bool ShowRelicFoundIndicator
+    {
+        get => _showRelicFoundIndicator;
+        set
+        {
+            if (_showRelicFoundIndicator == value) return;
+            _showRelicFoundIndicator = value;
+            OnChanged(nameof(_showRelicFoundIndicator));
+        }
+    }
+
     // Dev settings
 
     private int _captureIntervalMs = 333;
@@ -114,5 +126,6 @@ public static class SettingsExtensions
         dst.LogLevel = src.LogLevel;
         dst.DebugVisualizationEnabled = src.DebugVisualizationEnabled;
         dst.RequiredHitRatio = src.RequiredHitRatio;
+        dst.ShowRelicFoundIndicator = src.ShowRelicFoundIndicator;
     }
 }
