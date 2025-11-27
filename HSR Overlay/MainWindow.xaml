@@ -242,6 +242,22 @@
                    Opacity="0.9"
                    IsHitTestVisible="False"/>
 
+        <Border x:Name="RelicFoundIndicator"
+        Background="DarkRed"
+        CornerRadius="4"
+        Padding="4,2"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Top"
+        Margin="0,40,10,0"
+        Visibility="Collapsed"
+        Opacity="0.85">
+            <TextBlock x:Name="RelicFoundIndicatorText"
+               Text="Relic not found"
+               Foreground="White"
+               FontWeight="Bold"
+               FontSize="12" />
+        </Border>
+
         <!-- Relic popup (can scroll; not a menu) -->
         <Border x:Name="RelicPopup"
                 Visibility="Collapsed"
