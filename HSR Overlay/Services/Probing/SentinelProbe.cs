@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HSR_Overlay.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -42,8 +43,10 @@ public sealed class SentinelProbe : IProbe
         int hits = 0;
         var debugList = new List<SentinelDebugPoint>(_sentinels.Length);
 
-        foreach (var s in _sentinels)
+        for (int i = 0; i < _sentinels.Length; i++)
         {
+            var s = _sentinels[i];
+
             int cx = s.IsNormalized
                 ? ctx.OriginX + Math.Clamp((int)Math.Round(s.U * cw), 0, cw - 1)
                 : ctx.OriginX + Math.Clamp(s.X, 0, cw - 1);
@@ -51,13 +54,22 @@ public sealed class SentinelProbe : IProbe
                 ? ctx.OriginY + Math.Clamp((int)Math.Round(s.V * ch), 0, ch - 1)
                 : ctx.OriginY + Math.Clamp(s.Y, 0, ch - 1);
 
-            uint c = ctx.GetPixel(cx, cy);
-            bool match = CloseEnough(c, s.ExpectedArgb, s.Tolerance);
+            uint sampled = ctx.GetPixel(cx, cy);
+            bool match = CloseEnough(sampled, s.ExpectedArgb, s.Tolerance);
 
             debugList.Add(new SentinelDebugPoint(
                 s.IsNormalized, s.U, s.V, s.X, s.Y,
-                cx, cy, c, s.ExpectedArgb, match
-                ));
+                cx, cy, sampled, s.ExpectedArgb, match
+            ));
+
+
+            //if (!match)
+            //{
+            //    Log.Debug("sentinels",
+            //        $"{Key}[{i}] miss " +
+            //        $"pos=({cx},{cy}) norm={(s.IsNormalized ? $"{s.U:F3},{s.V:F3}" : "abs")} " +
+            //        $"sampled=0x{sampled:X8} expected=0x{s.ExpectedArgb:X8} tol={s.Tolerance}");
+            //}
 
             if (match) hits++;
         }
