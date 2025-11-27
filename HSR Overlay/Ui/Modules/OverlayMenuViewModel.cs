@@ -59,6 +59,24 @@ internal class OverlayMenuViewModel : INotifyPropertyChanged
                 // later: open per-module settings panel
             }));
 
+        relicCat.Modules.Add(new OverlayModule(
+            id: "relic-found-indicator",
+            title: "Relic Found Indicator",
+            category: ModuleCategory.RelicTools,
+            initialEnabled: Settings.Current.ShowRelicFoundIndicator,
+            onToggled: enabled =>
+            {
+                Log.Debug("modules", $"Relic Found Indicator toggled: {enabled}");
+                Settings.Current.ShowRelicFoundIndicator = enabled;
+                Settings.Save();
+                _applySettings();
+            },
+            onShowDetails: () =>
+            {
+                Log.Debug("modules", "Relic Found Indicator details requested");
+            }
+            ));
+
         debugCat.Modules.Add(new OverlayModule(
             id: "debug-visualization",
             title: "Debug Overlay",
@@ -76,10 +94,10 @@ internal class OverlayMenuViewModel : INotifyPropertyChanged
                 Log.Debug("modules", "Debug Overlay details requested");
             }));
 
-        generalCat.Modules.Add(new OverlayModule(
+        debugCat.Modules.Add(new OverlayModule(
             id: "verbose-logging",
             title: "Verbose Logging",
-            category: ModuleCategory.General,
+            category: ModuleCategory.Debug,
             initialEnabled: Settings.Current.LogLevel <= Microsoft.Extensions.Logging.LogLevel.Debug,
             onToggled: enabled =>
             {
