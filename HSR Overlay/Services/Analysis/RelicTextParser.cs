@@ -1,4 +1,5 @@
-﻿using HSR_Overlay.Util;
+﻿using HSR_Overlay.Services.State;
+using HSR_Overlay.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -51,15 +52,27 @@ internal class RelicTextParser : IRelicTextParser
         return StringToParsedRelic(cleanedText, _pieces);
     }
 
-    public EquippedRelic ParseEquippedFromCharacterScreen(string rawText)
+    public EquippedRelic ParseEquippedFromCharacterScreen(string rawText, CharacterNameDatabase characters)
     {
         var (relicLines, characterKey) = CleanCharacterScreenWithCharacter(rawText);
 
         var parsedRelic = StringToParsedRelic(relicLines, _pieces);
 
+        string finalCharacterKey = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(characterKey))
+        {
+            var resolved = characters.ResolveCharacter(characterKey);
+
+            if(!string.IsNullOrWhiteSpace(resolved))
+            {
+                finalCharacterKey = resolved;
+            }
+        }
+
         return new EquippedRelic
         {
-            CharacterKey = characterKey ?? string.Empty,
+            CharacterKey = finalCharacterKey,
             Relic = parsedRelic
         };
     }

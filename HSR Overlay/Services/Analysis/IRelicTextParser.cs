@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HSR_Overlay.Services.State;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,5 @@ internal interface IRelicTextParser
 {
     ParsedRelic Parse(string rawOcrText, RelicTextContext context);
 
-    public EquippedRelic ParseEquippedFromCharacterScreen(string rawText);
+    public EquippedRelic ParseEquippedFromCharacterScreen(string rawText, CharacterNameDatabase characters);
 }

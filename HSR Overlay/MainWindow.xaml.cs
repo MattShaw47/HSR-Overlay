@@ -89,6 +89,7 @@ public partial class MainWindow : Window
     private RelicPieceDatabase _relicPieceDb;
     private RelicStatTables _relicStatTables;
     private IRelicInventory _relicInventory;
+    private CharacterNameDatabase _characterNameDb;
 
     public MainWindow()
     {
@@ -264,6 +265,7 @@ public partial class MainWindow : Window
         string jsonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
 
         _relicPieceDb = RelicPieceDatabase.Load(System.IO.Path.Combine(jsonPath, "RelicNames.json"));
+        _characterNameDb = CharacterNameDatabase.Load(System.IO.Path.Combine(jsonPath, "Characters.json"));
         _relicTextParser = new RelicTextParser(_relicPieceDb);
         var emptyProfiles = new Dictionary<string, CharacterRelicProfile>();
         _relicWeightsProvider = new RelicWeightsProvider(emptyProfiles);

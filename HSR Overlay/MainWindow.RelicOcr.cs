@@ -348,7 +348,7 @@ public partial class MainWindow
             subName3.Save("subName3_raw.png");
             OcrReader.PrepareStatNameCrop(subName3).Save("subName3_prepped.png");
 
-            EquippedRelic equipped = _relicTextParser.ParseEquippedFromCharacterScreen(ocrResult);
+            EquippedRelic equipped = _relicTextParser.ParseEquippedFromCharacterScreen(ocrResult, _characterNameDb);
 
             equipped.Relic = RelicStatSanitizer.Sanitize(equipped.Relic, _relicStatTables);
 

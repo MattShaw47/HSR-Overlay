@@ -79,9 +79,6 @@ public sealed class CharacterNameDatabase
         return bestScore >= minSimilarity ? bestKey : null;
     }
 
-    // Used when you haven't wired a real DB yet
-    public static CharacterNameDatabase Empty { get; } = new();
-
     private static string NormalizeCharacterName(string? s)
     {
         if (string.IsNullOrEmpty(s))
