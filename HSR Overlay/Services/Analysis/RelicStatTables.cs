@@ -53,5 +53,14 @@ public sealed class RelicStatTables
     }
 
     public IEnumerable<Stat> AllSubstats => _substats.Keys;
+
+    public bool TryGetSubstatDef(Stat stat, out SubstatRollDefinition def)
+            => _substats.TryGetValue(stat, out def);
+
+    public bool TryGetMainDef(Stat stat, out MainStatDefinition def)
+        => _mainstats.TryGetValue(stat, out def);
+
+    public double GetMainMax(Stat stat)
+        => _mainstats[stat].MaxValue;
 }
 
