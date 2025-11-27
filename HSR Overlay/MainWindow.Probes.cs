@@ -38,8 +38,69 @@ public partial class MainWindow
             }
         };
 
-        _probeDebugHandlers["relic-modal"] = payload => DrawSentinelPoints(payload);
+        _probeDebugHandlers["relic-modal"] = payload => DrawSentinelPoints("relic-modal", payload);
         _probeActivatedHandlers["relic-modal"] = frame => StartRelicOcr(frame);
+
+        _probeStateHandlers["char-relics"] = active =>
+        {
+            _charScreenActive = active;
+
+            if (active)
+            {
+                _currentRelicSlotProbeKey = null;
+                _currentRelicHasGoodReading = false;
+                Dispatcher.Invoke(() => UpdateRelicFoundIndicator(false));
+                if (!_charOcrTimer.IsEnabled)
+                    _charOcrTimer.Start();
+            }
+            else
+            {
+                _charOcrTimer.Stop();
+                _currentRelicSlotProbeKey = null;
+                _currentRelicHasGoodReading = false;
+                Dispatcher.Invoke(() => RelicFoundIndicator.Visibility = System.Windows.Visibility.Collapsed);
+            }
+        };
+
+        _probeDebugHandlers["char-relics"] = payload => DrawSentinelPoints("char-relics", payload);
+        _probeActivatedHandlers["char-relics"] = frame => StartCharacterRelicOcr(frame);
+
+        _probeStateHandlers["slot-head"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-head");
+        };
+
+        _probeStateHandlers["slot-hands"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-hands");
+        };
+
+        _probeStateHandlers["slot-body"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-body");
+        };
+
+        _probeStateHandlers["slot-feet"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-feet");
+        };
+
+        _probeStateHandlers["slot-orb"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-orb");
+        };
+
+        _probeStateHandlers["slot-rope"] = active =>
+        {
+            if (active) OnRelicSlotActivated("slot-rope");
+        };
+
+        _probeDebugHandlers["slot-head"] = payload => DrawSentinelPoints("slot-head", payload);
+        _probeDebugHandlers["slot-hands"] = payload => DrawSentinelPoints("slot-hands", payload);
+        _probeDebugHandlers["slot-body"] = payload => DrawSentinelPoints("slot-body", payload);
+        _probeDebugHandlers["slot-feet"] = payload => DrawSentinelPoints("slot-feet", payload);
+        _probeDebugHandlers["slot-orb"] = payload => DrawSentinelPoints("slot-orb", payload);
+        _probeDebugHandlers["slot-rope"] = payload => DrawSentinelPoints("slot-rope", payload);
     }
 
     private void UnwireRuntimeEvents()
@@ -80,5 +141,19 @@ public partial class MainWindow
             if (active) _popup.Update("Relic detected — scanning...");
             else _popup.Hide();
         });
+    }
+
+    private void OnRelicSlotActivated(string probeKey)
+    {
+        if (!_charScreenActive)
+            return;
+
+        if (_currentRelicSlotProbeKey == probeKey)
+            return;
+
+        _currentRelicSlotProbeKey = probeKey;
+        _currentRelicHasGoodReading = false;
+
+        Dispatcher.Invoke(() => UpdateRelicFoundIndicator(false));
     }
 }

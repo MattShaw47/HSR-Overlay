@@ -18,100 +18,98 @@ namespace HSR_Overlay;
 
 public partial class MainWindow
 {
-    // optional fields:
-    // private SentinelDebugPoint[]? _lastSentinelDebug;
-    // private DRectangle _lastOcrRect;
-    // private bool _showProbeMarkers;
-
-    private void DrawSentinelPoints(object? payload)
+    private void DrawSentinelPoints(string probeKey, object? payload)
     {
         if (!Settings.Current.DebugVisualizationEnabled) return;
         if (payload is not IEnumerable<SentinelDebugPoint> pts) return;
 
-        _lastSentinelDebug = pts.ToArray();
+        _sentinelDebugByProbe[probeKey] = pts is List<SentinelDebugPoint> list
+            ? list
+            : new List<SentinelDebugPoint>(pts);
+
         RenderDebugOverlay();
     }
 
     private void DrawOcrRects(DRectangle[] rects)
     {
         if (!Settings.Current.DebugVisualizationEnabled) return;
-        //if (roi.Width <= 0 || roi.Height <= 0) return;
 
-        _lastOcrRects.Clear();
-
-        foreach (var r in rects)
+        _ocrDebugRects.Clear();
+        foreach (var roi in rects)
         {
-            if (r.Width <= 0 || r.Height <= 0) continue;
-            _lastOcrRects.Add(r);
+            if (roi.Width <= 0 || roi.Height <= 0) continue;
+            _ocrDebugRects.Add(roi);
         }
 
-        //if (_lastOcrRects.Count > 0)
-            RenderDebugOverlay();
+        RenderDebugOverlay();
     }
 
     private void DrawOcrRect(DRectangle roi) => DrawOcrRects(new DRectangle[] { roi });
 
-    private void RenderDebugOverlay()   
+    private void RenderDebugOverlay()
     {
         if (!Settings.Current.DebugVisualizationEnabled) return;
 
-        Dispatcher.Invoke(() =>
+        ProbeLayer.Children.Clear();
+
+        const double r = 4.0;
+
+        // 1) All sentinel dots from all probes
+        foreach (var kvp in _sentinelDebugByProbe)
         {
-            ProbeLayer.Children.Clear();
-
-            const double r = 4.0;
-
-            // sentinel dots
-            if (_lastSentinelDebug is not null)
+            foreach (var p in kvp.Value)
             {
-                foreach (var p in _lastSentinelDebug)
-                {
-                    var local = PointFromScreen(new WPoint(p.Cx, p.Cy));
-                    var dot = new Ellipse
-                    {
-                        Width = r * 2,
-                        Height = r * 2,
-                        StrokeThickness = 2,
-                        Stroke = p.Match ? MBrushes.Lime : MBrushes.Red,
-                        Fill = MBrushes.Transparent,
-                        IsHitTestVisible = false
-                    };
-                    Canvas.SetLeft(dot, local.X - r);
-                    Canvas.SetTop(dot, local.Y - r);
-                    ProbeLayer.Children.Add(dot);
-                }
-            }
+                var local = PointFromScreen(new Point(p.Cx, p.Cy));
 
-            // OCR rectangles
-            if (_lastOcrRects != null && _lastOcrRects.Count > 0)
+                var dot = new Ellipse
+                {
+                    Width = r * 2,
+                    Height = r * 2,
+                    StrokeThickness = 2,
+                    Stroke = p.Match
+                        ? Brushes.Lime
+                        : Brushes.Red,
+                    Fill = Brushes.Transparent,
+                    IsHitTestVisible = false
+                };
+
+                Canvas.SetLeft(dot, local.X - r);
+                Canvas.SetTop(dot, local.Y - r);
+                ProbeLayer.Children.Add(dot);
+            }
+        }
+
+        // 2) All current OCR rectangles
+        foreach (var roi in _ocrDebugRects)
+        {
+            var topLeft = PointFromScreen(new Point(roi.Left, roi.Top));
+            var bottomRight = PointFromScreen(new Point(roi.Right, roi.Bottom));
+
+            var w = Math.Max(0, bottomRight.X - topLeft.X);
+            var h = Math.Max(0, bottomRight.Y - topLeft.Y);
+            if (w <= 0 || h <= 0) continue;
+
+            var rect = new Rectangle
             {
-                foreach (var roi in _lastOcrRects)
-                {
-                    if (roi.Width <= 0 || roi.Height <= 0)
-                        continue;
+                Width = w,
+                Height = h,
+                StrokeThickness = 2,
+                Stroke = Brushes.Yellow,
+                Fill = Brushes.Transparent,
+                IsHitTestVisible = false
+            };
 
-                    var topLeft = PointFromScreen(new WPoint(roi.Left, roi.Top));
-                    var bottomRight = PointFromScreen(new WPoint(roi.Right, roi.Bottom));
+            Canvas.SetLeft(rect, topLeft.X);
+            Canvas.SetTop(rect, topLeft.Y);
+            ProbeLayer.Children.Add(rect);
+        }
+    }
 
-                    var w = Math.Max(0, bottomRight.X - topLeft.X);
-                    var h = Math.Max(0, bottomRight.Y - topLeft.Y);
-
-                    var rect = new Rectangle
-                    {
-                        Width = w,
-                        Height = h,
-                        StrokeThickness = 2,
-                        Stroke = MBrushes.Yellow,
-                        Fill = Brushes.Transparent,
-                        IsHitTestVisible = false
-                    };
-
-                    Canvas.SetLeft(rect, topLeft.X);
-                    Canvas.SetTop(rect, topLeft.Y);
-                    ProbeLayer.Children.Add(rect);
-                }
-            }
-        });
+    private void ClearDebugOverlayState()
+    {
+        _sentinelDebugByProbe.Clear();
+        _ocrDebugRects.Clear();
+        ProbeLayer.Children.Clear();
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
