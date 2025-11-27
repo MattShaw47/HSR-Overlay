@@ -26,6 +26,8 @@ public sealed class MainStatDefinition
     // If the main stat exists as a substat, link it here.
     public Stat? EquivalentSubstat { get; init; }
 
+    public bool IsPercent { get; init; }
+
     // If it doesn't, force an arbitrary equivalence like 10 rolls.
     public double? EquivalentRolls { get; init; }
 }
