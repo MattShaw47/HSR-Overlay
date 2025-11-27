@@ -9,4 +9,6 @@ namespace HSR_Overlay.Services.Analysis;
 internal interface IRelicTextParser
 {
     ParsedRelic Parse(string rawOcrText, RelicTextContext context);
+
+    public EquippedRelic ParseEquippedFromCharacterScreen(string rawText);
 }
