@@ -25,6 +25,7 @@ using WPoint = System.Windows.Point;
 using DRectangle = System.Drawing.Rectangle;
 using HSR_Overlay.Services.Analysis;
 using HSR_Overlay.Ui.Modules;
+using HSR_Overlay.Services.State;
 
 namespace HSR_Overlay;
 
@@ -57,6 +58,10 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _trackTimer = new() { Interval = TimeSpan.FromMilliseconds(80) };
     private readonly DispatcherTimer _captureTimer = new() { Interval = TimeSpan.FromMilliseconds(10) };
 
+    private readonly DispatcherTimer _charOcrTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
+    private bool _charScreenActive;
+    private bool _charOcrInProgress;
+
     private RelicPopupController _popup;
     private readonly DispatcherTimer _relicOcrTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
     private bool _relicModalActive;
@@ -65,10 +70,12 @@ public partial class MainWindow : Window
 
     private readonly CaptureService _capture = new();
     private bool _showProbeMarkers = true;
-    private IEnumerable<SentinelDebugPoint>? _lastSentinelDebug;
-    private readonly List<DRectangle> _lastOcrRects = new();
-    private DRectangle _lastOcrRect;
-    private bool _hasOcrRect;
+    private readonly List<SentinelDebugPoint> _sentinelDebugPoints = new();
+    private readonly Dictionary<string, List<SentinelDebugPoint>> _sentinelDebugByProbe = new();
+    private readonly List<DRectangle> _ocrDebugRects = new();
+    private string? _currentRelicSlotProbeKey;
+    private bool _currentRelicHasGoodReading;
+
 
 
     private readonly Dictionary<string, Action<bool>> _probeStateHandlers = new();
@@ -81,6 +88,7 @@ public partial class MainWindow : Window
     private IRelicWeightsProvider _relicWeightsProvider;
     private RelicPieceDatabase _relicPieceDb;
     private RelicStatTables _relicStatTables;
+    private IRelicInventory _relicInventory;
 
     public MainWindow()
     {
@@ -142,7 +150,8 @@ public partial class MainWindow : Window
         _trackTimer.Tick += (_, __) => TrackGameWindow();
         _trackTimer.Start();
 
-        // 4) register probes (relic modal)
+        // 4) register probes
+        // farming relic probes
         var relicSentinels = new[]
         {
             // top left
@@ -162,6 +171,93 @@ public partial class MainWindow : Window
             hysteresis: 1
         ));
 
+        _probeDebugHandlers["relic-modal"] = payload => { DrawSentinelPoints("relic-modal", payload); };
+
+        // character screen probes
+        var charRelicSentinels = new[]
+        {
+            // head icon (top left)
+            SentinelProbe.Sentinel.Normalized(0.04, 0.05, 0xFFBCA679, tol: 20),
+            // whitespace in sort by relic recommendation
+            SentinelProbe.Sentinel.Normalized(0.16, 0.92, 0xFFE3E4E9, tol: 20),
+            // center of orange relic dot next to lvl number (center of screen)
+            SentinelProbe.Sentinel.Normalized(0.482, 0.699, 0xFFB78D61, tol:25),
+            // on R in Remove button, to ensure on the equipped relic.
+            SentinelProbe.Sentinel.Normalized(0.8017, 0.9187, 0xFF121212, tol:25)
+        };
+
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "char-relics",
+            sentinels: charRelicSentinels,
+            requiredHitRatio: Settings.Current.RequiredHitRatio,
+            hysteresis: 1
+            ));
+
+        _probeDebugHandlers["char-relics"] = payload => { DrawSentinelPoints("char-relics", payload); };
+
+        // probes to detect whether relic screen is swapped between.
+        var slotHeadSentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.067, 0.125, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-head",
+            sentinels: slotHeadSentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+
+        var slotHandsSentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.102, 0.125, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-hands",
+            sentinels: slotHandsSentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+        var slotBodySentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.14, 0.137, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-body",
+            sentinels: slotBodySentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+        var slotFeetSentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.177, 0.145, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-feet",
+            sentinels: slotFeetSentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+        var slotOrbSentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.21, 0.147, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-orb",
+            sentinels: slotOrbSentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+        var slotRopeSentinels = new[]
+        {
+            SentinelProbe.Sentinel.Normalized(0.237, 0.141, 0xFFFFFFFF, tol: 18),
+        };
+        _capture.RegisterProbe(new SentinelProbe(
+            key: "slot-rope",
+            sentinels: slotRopeSentinels,
+            requiredHitRatio: 1.0,
+            hysteresis: 1));
+
+
         WireRuntimeEvents();
 
         // database / relic parser initialization
@@ -172,8 +268,9 @@ public partial class MainWindow : Window
         var emptyProfiles = new Dictionary<string, CharacterRelicProfile>();
         _relicWeightsProvider = new RelicWeightsProvider(emptyProfiles);
         _relicStatTables = new RelicStatTables(RelicStatConfig.Load(System.IO.Path.Combine(jsonPath, "RelicStats.json")));
+        _relicInventory = new RelicInventory(jsonPath);
         // load character profiles here as well
-        // load stored relic inventory
+        
 
         // periodic ocr while relic modal is active
         _relicOcrTimer.Tick += (_, __) =>
@@ -184,6 +281,15 @@ public partial class MainWindow : Window
 
             // Use the most recent frame snapshot
             StartRelicOcr(_capture.LastFrame);
+        };
+
+        _charOcrTimer.Tick += (_, __) =>
+        {
+            if (!_charScreenActive) return;
+            if (_charOcrInProgress) return;
+            if (!_capture.HasLastFrame) return;
+
+            StartCharacterRelicOcr(_capture.LastFrame);
         };
 
         // 5) capture loop
@@ -208,6 +314,19 @@ public partial class MainWindow : Window
             ConfigPanel.Visibility = Visibility.Collapsed;
         };
         BtnClose.Click += (_, __) => { ConfigPanel.Visibility = Visibility.Collapsed; };
+    }
+
+    private void UpdateRelicFoundIndicator(bool found)
+    {
+        if (!Settings.Current.ShowRelicFoundIndicator || !_charScreenActive)
+        {
+            RelicFoundIndicator.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        RelicFoundIndicator.Visibility = Visibility.Visible;
+        RelicFoundIndicator.Background = found ? MBrushes.DarkGreen : MBrushes.DarkRed;
+        RelicFoundIndicatorText.Text = found ? "Relic found" : "Relic not found";
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -236,6 +355,18 @@ public partial class MainWindow : Window
 
         // Logger level
         Log.Init(min: Settings.Current.LogLevel);
+
+        // relic found indicator visibility
+        if (Settings.Current.ShowRelicFoundIndicator && _charScreenActive)
+        {
+            RelicFoundIndicator.Visibility = Visibility.Visible;
+            RelicFoundIndicator.Background = MBrushes.DarkRed;
+            RelicFoundIndicatorText.Text = "Relic not found, wait a second";
+        }
+        else
+        {
+            RelicFoundIndicator.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void OverlayMenuHeader_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
