@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Windows.UI.Input;
+﻿using HSR_Overlay.Services.State;
 
 namespace HSR_Overlay.Services.Analysis;
 
 public static class RelicAnalyzer
 {
-    // add param -> relic inventory obj.
-    public static RelicEvaluation Analyze(ParsedRelic relic, IRelicWeightsProvider weights, RelicStatTables tables)
+    public static RelicEvaluation Analyze(
+        ParsedRelic relic,
+        string characterKey,
+        IRelicWeightsProvider weights,
+        RelicStatTables tables,
+        IRelicInventory inventory,
+        int trials = 10_000)
     {
         IReadOnlyList<RelicWeightsProfile> weightList = weights.GetProfiles(relic.Set, relic.Slot);
 
@@ -21,37 +19,26 @@ public static class RelicAnalyzer
             Relic = relic
         };
 
+        if (string.IsNullOrWhiteSpace(characterKey))
+            return evaluations;
 
-        foreach (var weightProfile in weightList)
+        var equipped = inventory.GetEquipped(characterKey, relic.Slot);
+        if (equipped is null)
+            return evaluations;
+
+        foreach (var weightProfile in weightList.Where(w => w.CharacterKey == characterKey))
         {
-            // grab comparison relic from relic inventory according to character and slot
-            // something like
-            // ParsedRelic comparisonRelic = inventory.getCurrentRelic(weightProfile.CharacterKey, weightProfile.SlotKey);
             var probability = RelicUpgradeSimulator.ProbabilityBeatsReference(
                 candidate: relic,
-                candidateLevel: 0,
-                referenceRelic: new ParsedRelic(),
+                candidateLevel: relic.Level,
+                referenceRelic: equipped,
                 profile: weightProfile,
                 tables: tables,
-                trials: 5_000);
+                trials: trials);
 
             evaluations.ImprovementChances[weightProfile.CharacterKey] = probability;
         }
 
-        // send to text parser
-        // send to relic object creator
-        // send to evaluation model with context
-        // actual analysis isnt finished yet, but thats just stats work and iterating through each set of weights and making the list of RelicEvaluation objects so I'm not worried about that.
         return evaluations;
     }
 }
-
-//public sealed record SubstatRollInfo(
-//    double Low,
-//    double Med,
-//    double High
-//)
-//{
-//    public double LowMultiplier => Low / Med;
-//    public double MedMultiplier => High / Med;
-//}

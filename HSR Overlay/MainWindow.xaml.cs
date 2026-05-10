@@ -26,6 +26,7 @@ using DRectangle = System.Drawing.Rectangle;
 using HSR_Overlay.Services.Analysis;
 using HSR_Overlay.Ui.Modules;
 using HSR_Overlay.Services.State;
+using HSR_Overlay.Services.Runtime;
 
 namespace HSR_Overlay;
 
@@ -78,9 +79,7 @@ public partial class MainWindow : Window
 
 
 
-    private readonly Dictionary<string, Action<bool>> _probeStateHandlers = new();
-    private readonly Dictionary<string, Action<object?>> _probeDebugHandlers = new();
-    private readonly Dictionary<string, Action<CaptureService.FrameInfo>> _probeActivatedHandlers = new();
+    private readonly OverlayRuntimeCoordinator _runtime;
 
     private Settings _settingsDraft = new();
 
@@ -96,6 +95,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _popup = new RelicPopupController(RelicPopup, RelicText);
+        _runtime = new OverlayRuntimeCoordinator(_capture);
 
         _overlayMenu = new OverlayMenuViewModel(ApplySettingsToRuntime, ToggleCategoryPanel);
         OverlayMenuHost.DataContext = _overlayMenu;
@@ -151,115 +151,13 @@ public partial class MainWindow : Window
         _trackTimer.Tick += (_, __) => TrackGameWindow();
         _trackTimer.Start();
 
-        // 4) register probes
-        // farming relic probes
-        var relicSentinels = new[]
-        {
-            // top left
-            SentinelProbe.Sentinel.Normalized(0.21, 0.30, 0xFFD3D3D3, tol: 18),
-            // top right
-            SentinelProbe.Sentinel.Normalized(0.79,  0.30, 0xFFD3D3D3, tol: 18),
-            // black bar next to 5th star
-            SentinelProbe.Sentinel.Normalized(0.325, 0.59, 0xFF282828, tol: 18),
-            // 5th star
-            SentinelProbe.Sentinel.Normalized(0.3315,0.595,0xFFFFCF70, tol: 18),
-        };
+        // 4) register probes from profile
+        string dataPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+        var probeProfiles = ProbeProfileSet.Load(System.IO.Path.Combine(dataPath, "ProbeProfiles.json"));
+        _runtime.RegisterProbes(probeProfiles);
 
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "relic-modal",
-            sentinels: relicSentinels,
-            requiredHitRatio: Settings.Current.RequiredHitRatio,
-            hysteresis: 1
-        ));
-
-        _probeDebugHandlers["relic-modal"] = payload => { DrawSentinelPoints("relic-modal", payload); };
-
-        // character screen probes
-        var charRelicSentinels = new[]
-        {
-            // head icon (top left)
-            SentinelProbe.Sentinel.Normalized(0.04, 0.05, 0xFFBCA679, tol: 20),
-            // whitespace in sort by relic recommendation
-            SentinelProbe.Sentinel.Normalized(0.16, 0.92, 0xFFE3E4E9, tol: 20),
-            // center of orange relic dot next to lvl number (center of screen)
-            SentinelProbe.Sentinel.Normalized(0.482, 0.699, 0xFFB78D61, tol:25),
-            // on R in Remove button, to ensure on the equipped relic.
-            SentinelProbe.Sentinel.Normalized(0.8017, 0.9187, 0xFF121212, tol:25)
-        };
-
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "char-relics",
-            sentinels: charRelicSentinels,
-            requiredHitRatio: Settings.Current.RequiredHitRatio,
-            hysteresis: 1
-            ));
-
-        _probeDebugHandlers["char-relics"] = payload => { DrawSentinelPoints("char-relics", payload); };
-
-        // probes to detect whether relic screen is swapped between.
-        var slotHeadSentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.067, 0.125, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-head",
-            sentinels: slotHeadSentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-
-        var slotHandsSentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.102, 0.125, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-hands",
-            sentinels: slotHandsSentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-        var slotBodySentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.14, 0.137, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-body",
-            sentinels: slotBodySentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-        var slotFeetSentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.177, 0.145, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-feet",
-            sentinels: slotFeetSentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-        var slotOrbSentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.21, 0.147, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-orb",
-            sentinels: slotOrbSentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-        var slotRopeSentinels = new[]
-        {
-            SentinelProbe.Sentinel.Normalized(0.237, 0.141, 0xFFFFFFFF, tol: 18),
-        };
-        _capture.RegisterProbe(new SentinelProbe(
-            key: "slot-rope",
-            sentinels: slotRopeSentinels,
-            requiredHitRatio: 1.0,
-            hysteresis: 1));
-
-
-        WireRuntimeEvents();
+        ConfigureRuntimeHandlers();
+        _runtime.Wire();
 
         // database / relic parser initialization
         string jsonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
@@ -337,6 +235,7 @@ public partial class MainWindow : Window
         _trackTimer.Stop();
         _captureTimer.Stop();
         _fgWatcher.Dispose();
+        _runtime.Unwire();
         _capture.Dispose();
         base.OnClosed(e);
     }

@@ -16,6 +16,7 @@
 	<None Remove="data\Characters.json" />
 	<None Remove="data\relicNames.json" />
 	<None Remove="data\RelicStats.json" />
+	<None Remove="data\ProbeProfiles.json" />
 	<Content Include="data\Characters.json">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</Content>
@@ -23,6 +24,9 @@
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</Content>
 	<Content Include="data\RelicStats.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Include="data\ProbeProfiles.json">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</Content>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
