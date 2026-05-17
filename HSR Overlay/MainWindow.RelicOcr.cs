@@ -368,7 +368,19 @@ public partial class MainWindow
             Dispatcher.Invoke(() => UpdateRelicFoundIndicator(true));
             Log.Debug("ocr", "acceptable relic found");
 
+            var evaluation = RelicAnalyzer.Analyze(
+                equipped.Relic,
+                equipped.CharacterKey,
+                _relicWeightsProvider,
+                _relicStatTables,
+                _relicInventory);
+            if (evaluation.ImprovementChances.TryGetValue(equipped.CharacterKey, out var chance))
+            {
+                Log.Debug("analysis", $"{equipped.CharacterKey} improvement chance: {chance:P1}");
+            }
+
             _relicInventory.setEquipped(equipped.CharacterKey, equipped.Relic.Slot, equipped.Relic);
+            _relicInventory.Save();
 
         }
         finally

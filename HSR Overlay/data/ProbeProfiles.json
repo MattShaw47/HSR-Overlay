@@ -1,0 +1,30 @@
+{
+  "defaultRequiredHitRatio": 1.0,
+  "defaultHysteresis": 1,
+  "probes": {
+    "relic-modal": {
+      "requiredHitRatio": 1.0,
+      "sentinels": [
+        { "u": 0.21, "v": 0.30, "expectedArgb": 4292068563, "tolerance": 18 },
+        { "u": 0.79, "v": 0.30, "expectedArgb": 4292068563, "tolerance": 18 },
+        { "u": 0.325, "v": 0.59, "expectedArgb": 4280821800, "tolerance": 18 },
+        { "u": 0.3315, "v": 0.595, "expectedArgb": 4294950768, "tolerance": 18 }
+      ]
+    },
+    "char-relics": {
+      "requiredHitRatio": 1.0,
+      "sentinels": [
+        { "u": 0.04, "v": 0.05, "expectedArgb": 4290551417, "tolerance": 20 },
+        { "u": 0.16, "v": 0.92, "expectedArgb": 4293125353, "tolerance": 20 },
+        { "u": 0.482, "v": 0.699, "expectedArgb": 4289697121, "tolerance": 25 },
+        { "u": 0.8017, "v": 0.9187, "expectedArgb": 4279374354, "tolerance": 25 }
+      ]
+    },
+    "slot-head": { "sentinels": [ { "u": 0.067, "v": 0.125, "expectedArgb": 4294967295, "tolerance": 18 } ] },
+    "slot-hands": { "sentinels": [ { "u": 0.102, "v": 0.125, "expectedArgb": 4294967295, "tolerance": 18 } ] },
+    "slot-body": { "sentinels": [ { "u": 0.14, "v": 0.137, "expectedArgb": 4294967295, "tolerance": 18 } ] },
+    "slot-feet": { "sentinels": [ { "u": 0.177, "v": 0.145, "expectedArgb": 4294967295, "tolerance": 18 } ] },
+    "slot-orb": { "sentinels": [ { "u": 0.21, "v": 0.147, "expectedArgb": 4294967295, "tolerance": 18 } ] },
+    "slot-rope": { "sentinels": [ { "u": 0.237, "v": 0.141, "expectedArgb": 4294967295, "tolerance": 18 } ] }
+  }
+}
